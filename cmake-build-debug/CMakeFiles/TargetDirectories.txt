@@ -1,0 +1,3 @@
+/home/angelo/Documentos/estudos/computgrafica/Trabalho/RayTracing/MyVoxelWorld/cmake-build-debug/CMakeFiles/MyVoxelWorld.dir
+/home/angelo/Documentos/estudos/computgrafica/Trabalho/RayTracing/MyVoxelWorld/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/angelo/Documentos/estudos/computgrafica/Trabalho/RayTracing/MyVoxelWorld/cmake-build-debug/CMakeFiles/rebuild_cache.dir
