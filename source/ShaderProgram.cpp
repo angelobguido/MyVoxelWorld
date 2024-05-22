@@ -98,3 +98,7 @@ void ShaderProgram::checkLinkErrors(uint program) {
 void ShaderProgram::use() const {
     glUseProgram(id);
 }
+
+ShaderProgram::~ShaderProgram() {
+    glDeleteProgram(id);
+}

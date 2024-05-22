@@ -15,6 +15,7 @@ public:
     uint id;
 
     ShaderProgram(const std::vector< std::pair< std::string,uint > > &shaders);
+    ~ShaderProgram();
     void use() const;
 
 private:

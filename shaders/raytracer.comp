@@ -20,7 +20,7 @@ const vec3 forwards = vec3(0,0,-1);
 const vec3 cameraPos = vec3(0,0,4);
 const vec3 right = vec3(1,0,0);
 const vec3 up = vec3(0,1,0);
-const vec3 sunDirection = normalize(vec3(1.0, 1.0, 1.0));
+const vec3 sunDirection = normalize(vec3(0, 0, -1.0));
 
 bool hit(Ray ray, Sphere sphere, inout float t) {
     vec3 oc = ray.origin - sphere.center;
@@ -62,7 +62,7 @@ void main() {
     ray.direction = normalize(forwards + horizontal_coefficient * right + vertical_coefficient * up);
 
     Sphere sphere;
-    sphere.center = vec3(3.0, 0.0, 0.0);
+    sphere.center = vec3(0.0, 0.0, 0.0);
     sphere.radius = 2.0;
     sphere.color = vec3(1.0, 0.75, 0.5);
 

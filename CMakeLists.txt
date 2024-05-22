@@ -6,6 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(MyVoxelWorld
         main.cpp
         source/ShaderProgram.cpp
+        source/App.cpp
+        source/Renderer.cpp
+        source/Renderer.h
 )
 
 target_link_libraries(MyVoxelWorld -lglfw -lGL -lGLEW -lm)
