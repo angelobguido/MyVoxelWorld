@@ -16,10 +16,10 @@ layout(local_size_x = 8, local_size_y = 8) in;
 
 layout(rgba32f, binding = 0) uniform image2D colorbuffer;
 
-const vec3 forwards = vec3(0,0,-1);
-const vec3 cameraPos = vec3(0,0,4);
-const vec3 right = vec3(1,0,0);
-const vec3 up = vec3(0,1,0);
+uniform vec3 forwards;
+uniform vec3 cameraPos;
+uniform vec3 right;
+uniform vec3 up;
 const vec3 sunDirection = normalize(vec3(0, 0, -1.0));
 
 bool hit(Ray ray, Sphere sphere, inout float t) {

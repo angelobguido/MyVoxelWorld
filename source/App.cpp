@@ -27,6 +27,11 @@ void App::run() {
 
         glfwPollEvents();
 
+        bool should_close = camera->update(frameTime/1000.0f);
+        if (should_close) {
+            break;
+        }
+
         renderer->update();
 
         glfwSwapBuffers(window);
@@ -85,8 +90,13 @@ void App::setUpGlfw() {
     window = glfwCreateWindow(800, 800, "Minha Janela", nullptr, nullptr);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(0);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void App::createRenderer() {
     renderer = new Renderer(screenShader, raytracerShader, window, colorBuffer);
+}
+
+void App::createCamera() {
+    camera = new Camera(raytracerShader, window);
 }

@@ -9,6 +9,8 @@ add_executable(MyVoxelWorld
         source/App.cpp
         source/Renderer.cpp
         source/Renderer.h
+        source/Camera.cpp
+        source/Camera.h
 )
 
 target_link_libraries(MyVoxelWorld -lglfw -lGL -lGLEW -lm)

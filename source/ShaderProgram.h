@@ -3,6 +3,7 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -17,6 +18,7 @@ public:
     ShaderProgram(const std::vector< std::pair< std::string,uint > > &shaders);
     ~ShaderProgram();
     void use() const;
+    void setVec3(const std::string& name, const glm::vec3& vec);
 
 private:
 

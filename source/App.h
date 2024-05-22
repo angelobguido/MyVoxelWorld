@@ -5,6 +5,8 @@
 #include <GLFW/glfw3.h>
 #include "ShaderProgram.h"
 #include "Renderer.h"
+#include "Camera.h"
+
 
 class App {
 public:
@@ -13,12 +15,14 @@ public:
     void run();
     void setUpOpenGl();
     void createRenderer();
+    void createCamera();
 
 private:
     void setUpGlfw();
     void handleFrameTiming();
 
     Renderer* renderer;
+    Camera* camera;
 
     GLFWwindow* window;
     ShaderProgram* raytracerShader;
