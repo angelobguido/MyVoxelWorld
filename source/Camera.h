@@ -14,10 +14,17 @@ class Camera {
     const float near = 0.1;
     const float far = 1000;
 
+    const int WIDTH = 800;
+    const int HEIGHT = 600;
+
 public:
     Camera(ShaderProgram* raytracerShader, GLFWwindow* window);
 
     bool update(float deltaTime);
+
+    void move(float deltaTime, int key);
+    void look(double mouseX, double mouseY);
+    void zoom();
 
     void recalculateProjection(int width, int height);
     void recalculateView();
@@ -39,6 +46,7 @@ private:
     bool firstMouse = true;
     double yaw = -90;
     double pitch = 0;
+    bool fullscreen = false;
 
     glm::mat4 inverseProjectionMatrix;
     glm::mat4 inverseViewMatrix;

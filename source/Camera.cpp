@@ -45,13 +45,28 @@ bool Camera::update(float deltaTime) {
         position.y += 1.0f * deltaTime * dUp * speed;
     }
 
+    //Commands:
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         return true;
     }
 
+
+    if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS && !fullscreen) {
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+        fullscreen = true;
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS && fullscreen) {
+        glfwSetWindowMonitor(window, nullptr, 100, 100, WIDTH, HEIGHT, GLFW_DONT_CARE);
+        fullscreen = false;
+    }
+
+
     //Mouse
     double mouseX, mouseY;
-    glfwPollEvents();
     glfwGetCursorPos(window, &mouseX, &mouseY);
 
     if (firstMouse){

@@ -1,7 +1,10 @@
 #include "App.h"
 
+App* App::currentApp = nullptr;
+
 App::App() {
     setUpGlfw();
+    currentApp = this;
 }
 
 App::~App() {
@@ -19,6 +22,8 @@ void App::run() {
 
     glfwShowWindow(window);
 
+    setUpCallbacks();
+
     lastTime = glfwGetTime();
     numFrames = 0;
     frameTime = 16.0f;
@@ -31,6 +36,7 @@ void App::run() {
         if (should_close) {
             break;
         }
+
 
         renderer->update();
 
@@ -87,16 +93,40 @@ void App::handleFrameTiming() {
 void App::setUpGlfw() {
     glfwInit();
 
-    window = glfwCreateWindow(800, 800, "Minha Janela", nullptr, nullptr);
+    window = glfwCreateWindow(1250, 1000, "Minha Janela", nullptr, nullptr);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(0);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 void App::createRenderer() {
-    renderer = new Renderer(screenShader, raytracerShader, window, colorBuffer);
+    renderer = new Renderer(screenShader, raytracerShader, window, &colorBuffer);
 }
 
 void App::createCamera() {
     camera = new Camera(raytracerShader, window);
 }
+
+void App::setUpCallbacks() {
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+}
+
+void App::framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+    glViewport(0,0,width,height);
+    currentApp->recreateColorBuffer(width,height);
+    currentApp->camera->recalculateProjection(width, height);
+    currentApp->renderer->recalculateWorkGroups(width, height);
+
+}
+
+void App::recreateColorBuffer(int width, int height) {
+    glDeleteTextures(1, &colorBuffer);
+    glGenTextures(1, &colorBuffer);
+    glBindTexture(GL_TEXTURE_2D, colorBuffer);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, width, height);
+}
+
