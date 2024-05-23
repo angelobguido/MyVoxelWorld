@@ -16,10 +16,10 @@ layout(local_size_x = 8, local_size_y = 8) in;
 
 layout(rgba32f, binding = 0) uniform image2D colorbuffer;
 
-uniform vec3 forwards;
-uniform vec3 cameraPos;
-uniform vec3 right;
-uniform vec3 up;
+uniform vec3 cameraPosition;
+uniform mat4 inverseProjectionMatrix;
+uniform mat4 inverseViewMatrix;
+
 const vec3 sunDirection = normalize(vec3(0, 0, -1.0));
 
 bool hit(Ray ray, Sphere sphere, inout float t) {
@@ -52,17 +52,17 @@ void main() {
         return;
     }
 
-    float aspect_ratio = float(screen_size.y) / float(screen_size.x);
-
-    float horizontal_coefficient = (2.0 * pixelPos.x - screen_size.x) / screen_size.x;
-    float vertical_coefficient = aspect_ratio * (2.0 * pixelPos.y - screen_size.y) / screen_size.y;
-
     Ray ray;
-    ray.origin = cameraPos;
-    ray.direction = normalize(forwards + horizontal_coefficient * right + vertical_coefficient * up);
+    ray.origin = cameraPosition;
+
+    vec2 coord = vec2( float(pixelPos.x) / float(screen_size.x), float(pixelPos.y) / float(screen_size.y));
+    coord = coord * 2 - 1;
+
+    vec4 target = inverseProjectionMatrix * vec4(coord.x, coord.y, 1, 1);
+    ray.direction = vec3(inverseViewMatrix * vec4(normalize(vec3(target) / target.w), 0));
 
     Sphere sphere;
-    sphere.center = vec3(0.0, 0.0, 0.0);
+    sphere.center = vec3(0.0, 0.0, -6.0);
     sphere.radius = 2.0;
     sphere.color = vec3(1.0, 0.75, 0.5);
 

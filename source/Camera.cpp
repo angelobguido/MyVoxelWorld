@@ -2,6 +2,11 @@
 
 Camera::Camera(ShaderProgram *raytracerShader, GLFWwindow *window): raytracerShader(raytracerShader), window(window) {
 
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+
+    recalculateProjection(width, height);
+    recalculateView();
 }
 
 bool Camera::update(float deltaTime) {
@@ -32,12 +37,12 @@ bool Camera::update(float deltaTime) {
 
     if (glm::length(dPos) > 0.1f) {
         dPos = glm::normalize(dPos);
-        position += 1.0f * deltaTime * dPos.x * front;
-        position += 1.0f * deltaTime * dPos.y * right;
+        position += 1.0f * deltaTime * dPos.x * front * speed;
+        position += 1.0f * deltaTime * dPos.y * right * speed;
     }
 
     if (glm::abs(dUp) > 0.1f){
-        position.y += 1.0f * deltaTime * dUp;
+        position.y += 1.0f * deltaTime * dUp * speed;
     }
 
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
@@ -77,13 +82,21 @@ bool Camera::update(float deltaTime) {
     front.z = glm::sin(glm::radians(yaw)) * glm::cos(glm::radians(pitch));
     front = glm::normalize(front);
 
+    recalculateView();
     raytracerShader->use();
-    raytracerShader->setVec3("forwards", front);
-    raytracerShader->setVec3("right", right);
-    raytracerShader->setVec3("up", up);
-    raytracerShader->setVec3("cameraPos", position);
+    raytracerShader->setMat4("inverseViewMatrix", inverseViewMatrix);
+    raytracerShader->setMat4("inverseProjectionMatrix", inverseProjectionMatrix);
+    raytracerShader->setVec3("cameraPosition", position);
 
     return false;
 }
 
+
+void Camera::recalculateView() {
+    inverseViewMatrix = glm::inverse(glm::lookAt(position, position + front, up));
+}
+
+void Camera::recalculateProjection(int width, int height) {
+    inverseProjectionMatrix = glm::inverse(glm::perspectiveFov(fov, (float)width, (float)height, near, far));
+}
 
