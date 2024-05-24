@@ -1,12 +1,5 @@
 #version 430
 
-struct Sphere {
-    vec3 center;
-    float radius;
-    vec3 color;
-    float padding;
-};
-
 struct Ray {
     vec3 origin;
     vec3 direction;
@@ -22,26 +15,120 @@ uniform mat4 inverseViewMatrix;
 
 const vec3 sunDirection = normalize(vec3(0, 0, -1.0));
 
+const int[3][3][3] voxelGrid = {
+{
+{1,1,1},
+{1,1,1},
+{1,1,1}
+},
+{
+{1,1,1},
+{1,1,1},
+{1,1,1}
+},
+{
+{1,1,1},
+{1,1,1},
+{1,1,1}
+},
+};
 
-bool hit(Ray ray, Sphere sphere, inout float t) {
-    vec3 oc = ray.origin - sphere.center;
+const ivec3 gridSize = ivec3(3,3,3);
 
-    float a = dot(ray.direction, ray.direction);
-    float b = 2 * dot(oc, ray.direction);
-    float c = dot(oc, oc) - sphere.radius * sphere.radius;
+// Utility function to calculate intersection with grid boundaries
+bool intersectGridBounds(Ray ray, out vec3 entryPoint, out ivec3 voxelPos) {
+    vec3 tMin = (vec3(0.0) - ray.origin) / ray.direction;
+    vec3 tMax = (vec3(gridSize) - ray.origin) / ray.direction;
 
-    float discriminant = b * b - 4 * a * c;
-    if (discriminant < 0) {
-        return false;
+    vec3 t1 = min(tMin, tMax);
+    vec3 t2 = max(tMin, tMax);
+
+    float tEntry = max(max(t1.x, t1.y), t1.z);
+    float tExit = min(min(t2.x, t2.y), t2.z);
+
+    if (tEntry > tExit || tExit < 0.0) {
+        return false; // No intersection with grid
     }
 
-    float t_hit = (-b - sqrt(discriminant)) / (2 * a);
-    if (t_hit < t && t_hit > 0.0001) {
-        t = t_hit;
-        return true;
+    entryPoint = ray.origin + ray.direction * tEntry;
+    voxelPos = ivec3(floor(entryPoint));
+    return true;
+}
+
+bool hit(Ray ray, inout float t) {
+
+    t = 0;
+
+    // Initialize ray parameters
+    vec3 invDir = 1.0 / ray.direction;
+    ivec3 stepInGrid = ivec3(sign(ray.direction));
+
+    vec3 entryPoint;
+    ivec3 voxelPos;
+    bool intersects = intersectGridBounds(ray, entryPoint, voxelPos);
+
+    // If the ray starts inside the grid, use the original ray origin
+    if (!intersects) {
+        if (ray.origin.x < 0 || ray.origin.x >= float(gridSize.x) ||
+        ray.origin.y < 0 || ray.origin.y >= float(gridSize.y) ||
+        ray.origin.z < 0 || ray.origin.z >= float(gridSize.z)) {
+             // No hit if starting outside and not intersecting
+//            return false;
+                return true;
+
+        } else {
+            entryPoint = ray.origin;
+            voxelPos = ivec3(floor(ray.origin));
+        }
     }
-    else {
-        return false;
+
+    ivec3 lastPos = voxelPos;
+
+    // Calculate tMax and tDelta
+    vec3 tMax = (vec3(voxelPos) + stepInGrid * 0.5 + 0.5 - entryPoint) * invDir;
+    vec3 tDelta = abs(invDir);
+
+    while (true) {
+        // Check if the current voxel is out of the grid bounds
+        if (voxelPos.x < 0 || voxelPos.x >= gridSize.x ||
+        voxelPos.y < 0 || voxelPos.y >= gridSize.y ||
+        voxelPos.z < 0 || voxelPos.z >= gridSize.z) {
+            return false;
+//                return true;
+        }
+
+
+        // Check if the current voxel is a block (1)
+        if (voxelGrid[voxelPos.x][voxelPos.y][voxelPos.z] == 1) {
+//            return true;
+                return false;
+        }
+
+        lastPos = voxelPos;
+
+        // Traverse the grid
+        if (tMax.x < tMax.y) {
+            if (tMax.x < tMax.z) {
+                voxelPos.x += stepInGrid.x;
+                tMax.x += tDelta.x;
+                t += tDelta.x;
+
+            } else {
+                voxelPos.z += stepInGrid.z;
+                tMax.z += tDelta.z;
+                t += tDelta.z;
+            }
+        } else {
+            if (tMax.y < tMax.z) {
+                voxelPos.y += stepInGrid.y;
+                tMax.y += tDelta.y;
+                t += tDelta.y;
+            } else {
+                voxelPos.z += stepInGrid.z;
+                tMax.z += tDelta.z;
+                t += tDelta.z;
+            }
+        }
     }
 }
 
@@ -62,20 +149,17 @@ void main() {
     vec4 target = inverseProjectionMatrix * vec4(coord.x, coord.y, 1, 1);
     ray.direction = vec3(inverseViewMatrix * vec4(normalize(vec3(target) / target.w), 0));
 
-    Sphere sphere;
-    sphere.center = vec3(0.0, 0.0, -6.0);
-    sphere.radius = 2.0;
-    sphere.color = vec3(1.0, 0.75, 0.5);
+    float t = 0;
 
-    float t = 99999;
+    vec3 color = vec3(0);
 
-    vec3 color = vec3(0.0);
-    if (hit(ray, sphere, t)) {
-        vec3 hit_pos = ray.origin + t * ray.direction;
-        vec3 normal = normalize(hit_pos - sphere.center);
-        float light_amount = max(0.0, dot(-sunDirection, normal));
-        color = light_amount * sphere.color;
+    if (hit(ray, t)) {
+//        vec3 hit_pos = ray.origin + t * ray.direction;
+//        float light_amount = max(0.0, dot(-sunDirection, normal));
+//        color = light_amount * vec3(0.5,0.5,0);
+        color = vec3(0.5,0.5,0);
     }
+
 
     imageStore(colorbuffer, pixelPos, vec4(color, 1.0));
 }

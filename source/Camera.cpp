@@ -103,6 +103,8 @@ bool Camera::update(float deltaTime) {
     raytracerShader->setMat4("inverseProjectionMatrix", inverseProjectionMatrix);
     raytracerShader->setVec3("cameraPosition", position);
 
+//    std::cout<<position.x<<" "<<position.y<<" "<<position.z<<std::endl;
+
     return false;
 }
 
