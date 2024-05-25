@@ -42,7 +42,7 @@ bool intersectGridBounds(Ray ray, out ivec3 voxelPos, out float tEntry, inout ve
 
     float tExit = min(min(t2.x, t2.y), t2.z);
 
-    if (tEntry > tExit || tExit < 0.0) {
+    if (tEntry > tExit) {
         return false; // No intersection with grid
     }
 
@@ -72,17 +72,19 @@ bool hit(Ray ray, inout float t, inout vec3 normal) {
     ivec3 stepInGrid = ivec3(sign(ray.direction));
 
     ivec3 voxelPos;
-    bool intersects = intersectGridBounds(ray, voxelPos, t, normal);
 
     // If the ray starts inside the grid, use the original ray origin
-    if (!intersects) {
-        if (ray.origin.x < 0.0 || ray.origin.x >= float(gridSize.x) ||
-        ray.origin.y < 0.0 || ray.origin.y >= float(gridSize.y) ||
-        ray.origin.z < 0.0 || ray.origin.z >= float(gridSize.z)) {
-            return false; // No hit if starting outside and not intersecting
-        } else {
-            voxelPos = ivec3(floor(ray.origin));
-        }
+    if (!(ray.origin.x < 0.0 || ray.origin.x >= float(gridSize.x) ||
+    ray.origin.y < 0.0 || ray.origin.y >= float(gridSize.y) ||
+    ray.origin.z < 0.0 || ray.origin.z >= float(gridSize.z))) {
+        voxelPos = ivec3(floor(ray.origin));
+        normal = vec3(0);
+    }
+
+    // If it is outside check if it will intersect the grid or not
+    else{
+        if (!intersectGridBounds(ray, voxelPos, t, normal))
+            return false;
     }
 
     // Calculate tMax and tDelta
@@ -160,7 +162,7 @@ void main() {
     vec3 color = vec3(0);
     vec3 normal;
 
-    if (hit(ray, t, normal)) {
+    if (hit(ray, t, normal) && t > 0) {
         float light_amount = max(0.0, dot(-ray.direction, normal));
         color = light_amount * vec3(0.5,0.2,0);
 //        color = normal*0.5 + 0.5;
