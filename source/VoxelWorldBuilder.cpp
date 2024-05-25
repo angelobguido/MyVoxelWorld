@@ -11,7 +11,7 @@ void VoxelWorldBuilder::build() {
     std::mt19937 gen(rd());
 
     int min = 0;
-    int max = 1;
+    int max = 3;
 
     std::uniform_int_distribution<int> dist(min, max);
 

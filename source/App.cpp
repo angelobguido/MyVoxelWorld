@@ -39,7 +39,6 @@ void App::run() {
             break;
         }
 
-
         renderer->update();
 
         glfwSwapBuffers(window);
