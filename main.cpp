@@ -7,6 +7,7 @@ int main(){
     app.setUpOpenGl();
     app.createRenderer();
     app.createCamera();
+    app.setUpBuilder();
 
     app.run();
 

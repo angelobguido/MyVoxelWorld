@@ -8,16 +8,16 @@ struct Ray {
 layout(local_size_x = 8, local_size_y = 8) in;
 
 layout(rgba32f, binding = 0) uniform image2D colorbuffer;
+layout(std430, binding = 1) readonly buffer sceneData{
+    int[] voxelGrid;
+};
+uniform ivec3 gridSize;
 
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 
 const vec3 sunDirection = normalize(vec3(0.5, 1, -1.0));
-
-const int[] voxelGrid = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
-
-const ivec3 gridSize = ivec3(10,50,2);
 
 // Utility function to calculate intersection with grid boundaries
 bool intersectGridBounds(Ray ray, out ivec3 voxelPos, out float tEntry, inout vec3 normal) {
@@ -46,18 +46,22 @@ bool intersectGridBounds(Ray ray, out ivec3 voxelPos, out float tEntry, inout ve
         return false; // No intersection with grid
     }
 
+    if (tEntry < 0){
+        return false;
+    }
+
     // Calculate the intersection point
     vec3 intersectionPoint = ray.origin + ray.direction * tEntry;
 
     // Adjust for precision issues by adding a small epsilon
     const float epsilon = 1e-4;
-    intersectionPoint += epsilon * ray.direction;
+    intersectionPoint += epsilon * normalize(ray.direction);
 
     // Calculate the voxel position
     voxelPos = ivec3(floor(intersectionPoint));
 
     // Ensure that the voxel position is within the grid bounds
-    voxelPos = clamp(voxelPos, ivec3(0), gridSize - 1);
+//    voxelPos = clamp(voxelPos, ivec3(0), gridSize - 1);
 
     return true;
 }
@@ -85,15 +89,16 @@ bool hit(Ray ray, inout float t, inout vec3 normal) {
     else{
         if (!intersectGridBounds(ray, voxelPos, t, normal))
             return false;
+
     }
 
     // Calculate tMax and tDelta
-    vec3 tMax = (vec3(voxelPos + stepInGrid) - ray.origin) * invDir;
+    vec3 tMax = (vec3(voxelPos + stepInGrid*0.5 + 0.5) - ray.origin) * invDir;
     vec3 tDelta = abs(invDir);
 
     int i = 0;
 
-    while (i < 500) {
+    while (i<10000) {
         i++;
 
         // Check if the current voxel is out of the grid bounds
@@ -162,7 +167,7 @@ void main() {
     vec3 color = vec3(0);
     vec3 normal;
 
-    if (hit(ray, t, normal) && t > 0) {
+    if (hit(ray, t, normal)) {
         float light_amount = max(0.0, dot(-ray.direction, normal));
         color = light_amount * vec3(0.5,0.2,0);
 //        color = normal*0.5 + 0.5;

@@ -16,6 +16,7 @@ App::~App() {
     glfwTerminate();
 
     delete renderer;
+    delete builder;
 }
 
 void App::run() {
@@ -23,6 +24,7 @@ void App::run() {
     glfwShowWindow(window);
 
     setUpCallbacks();
+    builder->build();
 
     lastTime = glfwGetTime();
     numFrames = 0;
@@ -128,5 +130,9 @@ void App::recreateColorBuffer(int width, int height) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, width, height);
+}
+
+void App::setUpBuilder() {
+    builder = new VoxelWorldBuilder(raytracerShader, 1000, 30, 1000);
 }
 

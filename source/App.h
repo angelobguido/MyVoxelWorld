@@ -6,6 +6,7 @@
 #include "ShaderProgram.h"
 #include "Renderer.h"
 #include "Camera.h"
+#include "VoxelWorldBuilder.h"
 
 
 class App {
@@ -14,6 +15,7 @@ public:
     ~App();
     void run();
     void setUpOpenGl();
+    void setUpBuilder();
     void createRenderer();
     void createCamera();
 
@@ -30,6 +32,7 @@ private:
 
     Renderer* renderer;
     Camera* camera;
+    VoxelWorldBuilder* builder;
 
     GLFWwindow* window;
     ShaderProgram* raytracerShader;

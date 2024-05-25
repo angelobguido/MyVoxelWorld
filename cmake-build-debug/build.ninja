@@ -79,6 +79,12 @@ build CMakeFiles/MyVoxelWorld.dir/source/Camera.cpp.o: CXX_COMPILER__MyVoxelWorl
   OBJECT_DIR = CMakeFiles/MyVoxelWorld.dir
   OBJECT_FILE_DIR = CMakeFiles/MyVoxelWorld.dir/source
 
+build CMakeFiles/MyVoxelWorld.dir/source/VoxelWorldBuilder.cpp.o: CXX_COMPILER__MyVoxelWorld_unscanned_Debug /home/angelo/Documentos/estudos/computgrafica/Trabalho/RayTracing/MyVoxelWorld/source/VoxelWorldBuilder.cpp || cmake_object_order_depends_target_MyVoxelWorld
+  DEP_FILE = CMakeFiles/MyVoxelWorld.dir/source/VoxelWorldBuilder.cpp.o.d
+  FLAGS = -g -std=gnu++17 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles/MyVoxelWorld.dir
+  OBJECT_FILE_DIR = CMakeFiles/MyVoxelWorld.dir/source
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target MyVoxelWorld
@@ -87,7 +93,7 @@ build CMakeFiles/MyVoxelWorld.dir/source/Camera.cpp.o: CXX_COMPILER__MyVoxelWorl
 #############################################
 # Link the executable MyVoxelWorld
 
-build MyVoxelWorld: CXX_EXECUTABLE_LINKER__MyVoxelWorld_Debug CMakeFiles/MyVoxelWorld.dir/main.cpp.o CMakeFiles/MyVoxelWorld.dir/source/ShaderProgram.cpp.o CMakeFiles/MyVoxelWorld.dir/source/App.cpp.o CMakeFiles/MyVoxelWorld.dir/source/Renderer.cpp.o CMakeFiles/MyVoxelWorld.dir/source/Camera.cpp.o
+build MyVoxelWorld: CXX_EXECUTABLE_LINKER__MyVoxelWorld_Debug CMakeFiles/MyVoxelWorld.dir/main.cpp.o CMakeFiles/MyVoxelWorld.dir/source/ShaderProgram.cpp.o CMakeFiles/MyVoxelWorld.dir/source/App.cpp.o CMakeFiles/MyVoxelWorld.dir/source/Renderer.cpp.o CMakeFiles/MyVoxelWorld.dir/source/Camera.cpp.o CMakeFiles/MyVoxelWorld.dir/source/VoxelWorldBuilder.cpp.o
   FLAGS = -g
   LINK_LIBRARIES = -lglfw  -lGL  -lGLEW  -lm
   OBJECT_DIR = CMakeFiles/MyVoxelWorld.dir

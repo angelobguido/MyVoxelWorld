@@ -11,6 +11,8 @@ add_executable(MyVoxelWorld
         source/Renderer.h
         source/Camera.cpp
         source/Camera.h
+        source/VoxelWorldBuilder.cpp
+        source/VoxelWorldBuilder.h
 )
 
 target_link_libraries(MyVoxelWorld -lglfw -lGL -lGLEW -lm)
