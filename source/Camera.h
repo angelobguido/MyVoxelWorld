@@ -11,7 +11,7 @@ class Camera {
 
     const float speed = 10;
     const float sensitivity = 0.1;
-    const float near = 0.1;
+    const float near = 0.01;
     const float far = 1000;
 
     const int WIDTH = 800;

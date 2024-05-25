@@ -13,123 +13,129 @@ uniform vec3 cameraPosition;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 
-const vec3 sunDirection = normalize(vec3(0, 0, -1.0));
+const vec3 sunDirection = normalize(vec3(0.5, 1, -1.0));
 
-const int[3][3][3] voxelGrid = {
-{
-{1,1,1},
-{1,1,1},
-{1,1,1}
-},
-{
-{1,1,1},
-{1,1,1},
-{1,1,1}
-},
-{
-{1,1,1},
-{1,1,1},
-{1,1,1}
-},
-};
+const int[] voxelGrid = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
 
-const ivec3 gridSize = ivec3(3,3,3);
+const ivec3 gridSize = ivec3(10,50,2);
 
 // Utility function to calculate intersection with grid boundaries
-bool intersectGridBounds(Ray ray, out vec3 entryPoint, out ivec3 voxelPos) {
+bool intersectGridBounds(Ray ray, out ivec3 voxelPos, out float tEntry, inout vec3 normal) {
+
+    vec3 step = sign(ray.direction);
+
     vec3 tMin = (vec3(0.0) - ray.origin) / ray.direction;
     vec3 tMax = (vec3(gridSize) - ray.origin) / ray.direction;
 
     vec3 t1 = min(tMin, tMax);
     vec3 t2 = max(tMin, tMax);
 
-    float tEntry = max(max(t1.x, t1.y), t1.z);
+    tEntry = max(max(t1.x, t1.y), t1.z);
+
+    if(tEntry == t1.x){
+        normal = vec3(-step.x, 0, 0);
+    } else if(tEntry == t1.y){
+        normal = vec3(0, -step.y, 0);
+    } else{
+        normal = vec3(0, 0, -step.z);
+    }
+
     float tExit = min(min(t2.x, t2.y), t2.z);
 
     if (tEntry > tExit || tExit < 0.0) {
         return false; // No intersection with grid
     }
 
-    entryPoint = ray.origin + ray.direction * tEntry;
-    voxelPos = ivec3(floor(entryPoint));
+    // Calculate the intersection point
+    vec3 intersectionPoint = ray.origin + ray.direction * tEntry;
+
+    // Adjust for precision issues by adding a small epsilon
+    const float epsilon = 1e-4;
+    intersectionPoint += epsilon * ray.direction;
+
+    // Calculate the voxel position
+    voxelPos = ivec3(floor(intersectionPoint));
+
+    // Ensure that the voxel position is within the grid bounds
+    voxelPos = clamp(voxelPos, ivec3(0), gridSize - 1);
+
     return true;
 }
 
-bool hit(Ray ray, inout float t) {
 
-    t = 0;
+bool hit(Ray ray, inout float t, inout vec3 normal) {
+    t = 0.0;
+    normal = vec3(0.0);
 
     // Initialize ray parameters
     vec3 invDir = 1.0 / ray.direction;
     ivec3 stepInGrid = ivec3(sign(ray.direction));
 
-    vec3 entryPoint;
     ivec3 voxelPos;
-    bool intersects = intersectGridBounds(ray, entryPoint, voxelPos);
+    bool intersects = intersectGridBounds(ray, voxelPos, t, normal);
 
     // If the ray starts inside the grid, use the original ray origin
     if (!intersects) {
-        if (ray.origin.x < 0 || ray.origin.x >= float(gridSize.x) ||
-        ray.origin.y < 0 || ray.origin.y >= float(gridSize.y) ||
-        ray.origin.z < 0 || ray.origin.z >= float(gridSize.z)) {
-             // No hit if starting outside and not intersecting
-//            return false;
-                return true;
-
+        if (ray.origin.x < 0.0 || ray.origin.x >= float(gridSize.x) ||
+        ray.origin.y < 0.0 || ray.origin.y >= float(gridSize.y) ||
+        ray.origin.z < 0.0 || ray.origin.z >= float(gridSize.z)) {
+            return false; // No hit if starting outside and not intersecting
         } else {
-            entryPoint = ray.origin;
             voxelPos = ivec3(floor(ray.origin));
         }
     }
 
-    ivec3 lastPos = voxelPos;
-
     // Calculate tMax and tDelta
-    vec3 tMax = (vec3(voxelPos) + stepInGrid * 0.5 + 0.5 - entryPoint) * invDir;
+    vec3 tMax = (vec3(voxelPos + stepInGrid) - ray.origin) * invDir;
     vec3 tDelta = abs(invDir);
 
-    while (true) {
+    int i = 0;
+
+    while (i < 500) {
+        i++;
+
         // Check if the current voxel is out of the grid bounds
         if (voxelPos.x < 0 || voxelPos.x >= gridSize.x ||
         voxelPos.y < 0 || voxelPos.y >= gridSize.y ||
         voxelPos.z < 0 || voxelPos.z >= gridSize.z) {
-            return false;
-//                return true;
+            return false; // No hit
         }
-
 
         // Check if the current voxel is a block (1)
-        if (voxelGrid[voxelPos.x][voxelPos.y][voxelPos.z] == 1) {
-//            return true;
-                return false;
+        if (voxelGrid[voxelPos.x + voxelPos.z * gridSize.x + voxelPos.y * gridSize.x * gridSize.z] == 1) {
+           return true; // Hit
         }
-
-        lastPos = voxelPos;
 
         // Traverse the grid
         if (tMax.x < tMax.y) {
             if (tMax.x < tMax.z) {
                 voxelPos.x += stepInGrid.x;
+                t = tMax.x;
+                normal = vec3(-stepInGrid.x, 0, 0);
                 tMax.x += tDelta.x;
-                t += tDelta.x;
-
             } else {
                 voxelPos.z += stepInGrid.z;
+                t = tMax.z;
+                normal = vec3(0, 0, -stepInGrid.z);
                 tMax.z += tDelta.z;
-                t += tDelta.z;
             }
         } else {
             if (tMax.y < tMax.z) {
                 voxelPos.y += stepInGrid.y;
+                t = tMax.y;
+                normal = vec3(0, -stepInGrid.y, 0);
                 tMax.y += tDelta.y;
-                t += tDelta.y;
             } else {
                 voxelPos.z += stepInGrid.z;
+                t = tMax.z;
+                normal = vec3(0, 0, -stepInGrid.z);
                 tMax.z += tDelta.z;
-                t += tDelta.z;
             }
         }
+
     }
+
+    return false; // No hit
 }
 
 void main() {
@@ -147,19 +153,26 @@ void main() {
     coord = coord * 2 - 1;
 
     vec4 target = inverseProjectionMatrix * vec4(coord.x, coord.y, 1, 1);
-    ray.direction = vec3(inverseViewMatrix * vec4(normalize(vec3(target) / target.w), 0));
+    ray.direction = normalize(vec3(inverseViewMatrix * vec4(normalize(vec3(target) / target.w), 0)));
 
     float t = 0;
 
     vec3 color = vec3(0);
+    vec3 normal;
 
-    if (hit(ray, t)) {
-//        vec3 hit_pos = ray.origin + t * ray.direction;
-//        float light_amount = max(0.0, dot(-sunDirection, normal));
-//        color = light_amount * vec3(0.5,0.5,0);
-        color = vec3(0.5,0.5,0);
+    if (hit(ray, t, normal)) {
+        float light_amount = max(0.0, dot(-ray.direction, normal));
+        color = light_amount * vec3(0.5,0.2,0);
+//        color = normal*0.5 + 0.5;
     }
 
+
+//
+//    ivec3 testStep = ivec3(sign(ray.direction));
+//
+//    if(testStep.z == 1){
+//        color = vec3(0,0,1);
+//    }
 
     imageStore(colorbuffer, pixelPos, vec4(color, 1.0));
 }
