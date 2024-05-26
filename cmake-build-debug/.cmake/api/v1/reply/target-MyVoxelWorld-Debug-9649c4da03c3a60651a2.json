@@ -31,7 +31,7 @@
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 18,
+				"line" : 19,
 				"parent" : 0
 			}
 		]
@@ -128,7 +128,8 @@
 			[
 				4,
 				6,
-				8
+				8,
+				9
 			]
 		}
 	],
@@ -183,6 +184,11 @@
 		{
 			"backtrace" : 1,
 			"path" : "source/VoxelWorldBuilder.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 1,
+			"path" : "source/PerlinNoise/PerlinNoise.hpp",
 			"sourceGroupIndex" : 1
 		}
 	],

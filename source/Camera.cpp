@@ -37,12 +37,12 @@ bool Camera::update(float deltaTime) {
 
     if (glm::length(dPos) > 0.1f) {
         dPos = glm::normalize(dPos);
-        position += 1.0f * deltaTime * dPos.x * front * speed;
-        position += 1.0f * deltaTime * dPos.y * right * speed;
+        position += deltaTime * dPos.x * front * speed;
+        position += deltaTime * dPos.y * right * speed;
     }
 
     if (glm::abs(dUp) > 0.1f){
-        position.y += 1.0f * deltaTime * dUp * speed;
+        position.y += deltaTime * dUp * speed;
     }
 
     //Commands:

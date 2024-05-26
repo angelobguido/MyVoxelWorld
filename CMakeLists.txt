@@ -13,6 +13,7 @@ add_executable(MyVoxelWorld
         source/Camera.h
         source/VoxelWorldBuilder.cpp
         source/VoxelWorldBuilder.h
+        source/PerlinNoise/PerlinNoise.hpp
 )
 
 target_link_libraries(MyVoxelWorld -lglfw -lGL -lGLEW -lm)

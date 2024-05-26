@@ -39,9 +39,10 @@ private:
     ShaderProgram* screenShader;
     unsigned int colorBuffer;
 
-    double lastTime, currentTime;
+    float lastTime, currentTime, lastTimeForFrame;
     int numFrames;
     float frameTime;
+    float delta;
 
 };
 

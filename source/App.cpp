@@ -27,6 +27,7 @@ void App::run() {
     builder->build();
 
     lastTime = glfwGetTime();
+    lastTimeForFrame = lastTime;
     numFrames = 0;
     frameTime = 16.0f;
 
@@ -34,7 +35,8 @@ void App::run() {
 
         glfwPollEvents();
 
-        bool should_close = camera->update(frameTime/1000.0f);
+        handleFrameTiming();
+        bool should_close = camera->update(delta);
         if (should_close) {
             break;
         }
@@ -43,7 +45,6 @@ void App::run() {
 
         glfwSwapBuffers(window);
 
-        handleFrameTiming();
 
     }
 }
@@ -75,15 +76,18 @@ void App::setUpOpenGl() {
 }
 
 void App::handleFrameTiming() {
-    currentTime = glfwGetTime();
-    double delta = currentTime - lastTime;
+    currentTime = (float)glfwGetTime();
+    delta = currentTime - lastTime;
+    lastTime = currentTime;
 
-    if (delta >= 1) {
-        int framerate{ std::max(1, int(numFrames / delta)) };
+    float deltaForFrame = currentTime - lastTimeForFrame;
+
+    if (deltaForFrame >= 1) {
+        int framerate{ std::max(1, int(numFrames / deltaForFrame)) };
         std::stringstream title;
         title << "Running at " << framerate << " fps.";
         glfwSetWindowTitle(window, title.str().c_str());
-        lastTime = currentTime;
+        lastTimeForFrame = currentTime;
         numFrames = -1;
         frameTime = float(1000.0 / framerate);
     }
@@ -132,6 +136,6 @@ void App::recreateColorBuffer(int width, int height) {
 }
 
 void App::setUpBuilder() {
-    builder = new VoxelWorldBuilder(raytracerShader, 1000, 30, 1000);
+    builder = new VoxelWorldBuilder(raytracerShader, 10, 10, 10);
 }
 
