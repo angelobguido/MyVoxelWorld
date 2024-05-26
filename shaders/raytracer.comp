@@ -31,17 +31,18 @@ uniform ivec3 gridSize;
 uniform vec3 cameraPosition;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
+uniform int rendererRandom;
+uniform int maxAccumulations;
 
-const int bounces = 3;
-const int acumulations = 1;
+const int bounces = 10;
 const vec3 backgroundColor = vec3(0.6, 0.7, 0.9);
-
+const float M_PI = 3.14159265358979323846;
 
 const Material[] materials = {
     Material(vec3(0,0,0), 0, 0, vec3(1), 0),
-    Material(vec3(1,0,0), 0.2, 0, vec3(1,0,0), 0.5),
-    Material(vec3(0,1,0), 0.5, 0, vec3(0,1,0), 0.5),
-    Material(vec3(0,0,1), 0.7, 0, vec3(0,0,1), 1),
+    Material(vec3(0.7,0.4,0), 1, 0, vec3(1,0,0), 0),
+    Material(vec3(0,0.7,0.1), 1, 0, vec3(0,1,0), 0),
+    Material(vec3(0,0.2,0.7), 1, 0, vec3(0,0,1), 0),
 };
 
 
@@ -85,7 +86,6 @@ bool intersectGridBounds(Ray ray, out ivec3 voxelPosition, out float tEntry, out
 
     return true;
 }
-
 
 HitPayload traceRay(Ray ray) {
     HitPayload hitPayload;
@@ -189,9 +189,9 @@ float randFloat(inout uint seed){
 
 vec3 randVec3(inout uint seed){
     return normalize(vec3(
-        randFloat(seed)*2 - 1,
-        randFloat(seed)*2 - 1,
-        randFloat(seed)*2 - 1
+        2*(randFloat(seed) - 0.5),
+        2*(randFloat(seed) - 0.5),
+        2*(randFloat(seed) - 0.5)
     ));
 }
 
@@ -203,7 +203,7 @@ void main() {
         return;
     }
 
-    uint seed = uint((pixelPos.x<<16) + (pixelPos.y));
+    uint seed = uint((pixelPos.x<<16) + (pixelPos.y) + rendererRandom);
 
     Ray ray;
 
@@ -219,35 +219,32 @@ void main() {
     HitPayload hitPayload;
     Material material;
 
-    vec3 lightSum = vec3(0);
+    vec3 light = vec3(0);
+    vec3 contribution = vec3(1);
 
-    for (int i = 0; i < acumulations; i++) {
+    for (int j = 0; j < bounces; j++){
+        seed += j;
+        hitPayload = traceRay(ray);
 
-        vec3 light = vec3(0);
-        vec3 contribution = vec3(1);
-
-        for (int j = 0; j < bounces; j++){
-            seed += j;
-            hitPayload = traceRay(ray);
-
-            if (hitPayload.hitDistance < 0) {
-                light += backgroundColor * contribution;
-                break;
-            }
-
-            material = materials[hitPayload.materialIndex];
-
-            contribution *= material.albedo;
-            light += material.emissionColor*material.emissionPower;
-
-            ray.origin = hitPayload.position + hitPayload.normal * 0.0001;
-            ray.direction = reflect(ray.direction, hitPayload.normal + material.roughness * randVec3(seed)/2);
+        if (hitPayload.hitDistance < 0) {
+            light += backgroundColor * contribution;
+            break;
         }
 
-        lightSum += light;
+        material = materials[hitPayload.materialIndex];
 
+        contribution *= material.albedo;
+        light += material.emissionColor*material.emissionPower;
+
+        if(j == bounces - 1){
+            light += backgroundColor * contribution;
+            break;
+        }
+
+        ray.origin = hitPayload.position + hitPayload.normal * 0.0001;
+        ray.direction = reflect(ray.direction, hitPayload.normal + material.roughness*randVec3(seed)/5.0);
     }
 
 
-    imageStore(colorbuffer, pixelPos, vec4(lightSum/acumulations, 1.0));
+    imageStore(colorbuffer, pixelPos, vec4(light, 1.0));
 }

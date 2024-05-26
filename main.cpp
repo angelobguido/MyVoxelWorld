@@ -2,7 +2,7 @@
 
 int main(){
 
-    App app;
+    App app(300,70,300);
 
     app.setUpOpenGl();
     app.createRenderer();

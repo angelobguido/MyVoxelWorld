@@ -7,21 +7,41 @@ VoxelWorldBuilder::VoxelWorldBuilder(ShaderProgram *raytracer, int gridSizeX, in
 void VoxelWorldBuilder::build() {
 
     std::random_device rd;
-
     std::mt19937 gen(rd());
 
     int min = 0;
     int max = 3;
 
     std::uniform_int_distribution<int> dist(min, max);
+    const siv::PerlinNoise::seed_type seed = 123456u;
+    const siv::PerlinNoise perlin{ seed };
+
 
     for(int x = 0; x < gridSize.x; x++){
         for(int y = 0; y < gridSize.y; y++){
             for(int z = 0; z < gridSize.z; z++){
-                voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
+
+                const int noise = (int)((perlin.noise2D((x * 0.01), (z * 0.01))*0.5+0.5)*gridSize.y);
+                if(y == noise){
+                    voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
+                }else if(y < noise){
+                    voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
+                }
+
             }
         }
     }
+
+//    for(int x = 0; x < gridSize.x; x++){
+//        for(int y = 0; y < gridSize.y; y++){
+//            for(int z = 0; z < gridSize.z; z++){
+//
+//                voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
+//
+//            }
+//        }
+//    }
+
     std::cout << "Grid created" << std::endl;
 
     glGenBuffers(1, &buffer);

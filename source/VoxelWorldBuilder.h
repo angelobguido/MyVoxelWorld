@@ -8,6 +8,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdlib>
+#include "PerlinNoise/PerlinNoise.hpp"
 
 class VoxelWorldBuilder {
 

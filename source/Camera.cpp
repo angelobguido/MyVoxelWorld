@@ -11,6 +11,8 @@ Camera::Camera(ShaderProgram *raytracerShader, GLFWwindow *window): raytracerSha
 
 bool Camera::update(float deltaTime) {
 
+    cameraMoved = false;
+
     glm::vec3 right = glm::normalize(glm::cross(front, up));
 
     //Keys
@@ -39,10 +41,14 @@ bool Camera::update(float deltaTime) {
         dPos = glm::normalize(dPos);
         position += deltaTime * dPos.x * front * speed;
         position += deltaTime * dPos.y * right * speed;
+
+        cameraMoved = true;
     }
 
     if (glm::abs(dUp) > 0.1f){
         position.y += deltaTime * dUp * speed;
+
+        cameraMoved = true;
     }
 
     //Commands:
@@ -82,6 +88,9 @@ bool Camera::update(float deltaTime) {
 
     xOffSet *= sensitivity;
     yOffSet *= sensitivity;
+
+    if(std::abs(xOffSet) > 0.1 || std::abs(yOffSet) > 0.1)
+        cameraMoved = true;
 
 
     yaw += xOffSet;

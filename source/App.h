@@ -11,7 +11,7 @@
 
 class App {
 public:
-    App();
+    App(int gridSizeX, int gridSizeY, int gridSizeZ);
     ~App();
     void run();
     void setUpOpenGl();
@@ -38,11 +38,16 @@ private:
     ShaderProgram* raytracerShader;
     ShaderProgram* screenShader;
     unsigned int colorBuffer;
+    unsigned int accumulationColorBuffer;
+    unsigned int sceneFramebuffer;
+    unsigned int accumulationFrameBuffer;
 
     float lastTime, currentTime, lastTimeForFrame;
     int numFrames;
     float frameTime;
     float delta;
+
+    int gridSizeX, gridSizeY, gridSizeZ;
 
 };
 

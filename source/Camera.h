@@ -29,6 +29,8 @@ public:
     void recalculateProjection(int width, int height);
     void recalculateView();
 
+    bool cameraMoved = true;
+
 private:
 
     GLFWwindow * window;
@@ -37,7 +39,7 @@ private:
     glm::mat4 getProjectionMatrix();
     glm::mat4 getViewMatrix();
 
-    glm::vec3 position = glm::vec3(0,40,12);
+    glm::vec3 position = glm::vec3(100,120,100);
     glm::vec3 front = glm::vec3(0,0,-1);
     glm::vec3 up = glm::vec3(0,1,0);
     float fov = 45;
