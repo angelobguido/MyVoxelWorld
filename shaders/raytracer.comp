@@ -34,7 +34,7 @@ uniform mat4 inverseViewMatrix;
 uniform int rendererRandom;
 uniform int maxAccumulations;
 
-const int bounces = 10;
+const int bounces = 5;
 const vec3 backgroundColor = vec3(0.6, 0.7, 0.9);
 const float M_PI = 3.14159265358979323846;
 
@@ -187,12 +187,18 @@ float randFloat(inout uint seed){
     return float(seed)/float(0xFFFFFFFF);
 }
 
-vec3 randVec3(inout uint seed){
+vec3 randSphere(inout uint seed){
     return normalize(vec3(
         2*(randFloat(seed) - 0.5),
         2*(randFloat(seed) - 0.5),
         2*(randFloat(seed) - 0.5)
     ));
+
+}
+
+vec3 randHemisphere(inout uint seed, vec3 normal){
+    vec3 v = randSphere(seed);
+    return v * sign(dot(v, normal));
 }
 
 void main() {
@@ -241,8 +247,9 @@ void main() {
             break;
         }
 
-        ray.origin = hitPayload.position + hitPayload.normal * 0.0001;
-        ray.direction = reflect(ray.direction, hitPayload.normal + material.roughness*randVec3(seed)/5.0);
+        ray.origin = hitPayload.position + hitPayload.normal * 0.001;
+//        ray.direction =  reflect(ray.direction, hitPayload.normal + material.roughness*randVec3(seed)/5.0);
+        ray.direction = randHemisphere(seed, hitPayload.normal);
     }
 
 
