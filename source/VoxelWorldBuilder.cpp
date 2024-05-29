@@ -17,30 +17,36 @@ void VoxelWorldBuilder::build() {
     const siv::PerlinNoise perlin{ seed };
 
 
-    for(int x = 0; x < gridSize.x; x++){
-        for(int y = 0; y < gridSize.y; y++){
-            for(int z = 0; z < gridSize.z; z++){
-
-                const int noise = (int)((perlin.noise2D((x * 0.01), (z * 0.01))*0.5+0.5)*gridSize.y);
-                if(y == noise){
-                    voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
-                }else if(y < noise){
-                    voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
-                }
-
-            }
-        }
-    }
-
 //    for(int x = 0; x < gridSize.x; x++){
 //        for(int y = 0; y < gridSize.y; y++){
 //            for(int z = 0; z < gridSize.z; z++){
 //
-//                voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
+//                const int noise = (int)((perlin.noise2D((x * 0.01), (z * 0.01))*0.5+0.5)*gridSize.y);
+//                if(y == noise){
+//                    voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
+//                }else if(y < noise){
+//                    voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
+//                }
 //
 //            }
 //        }
 //    }
+
+    for(int x = 0; x < gridSize.x; x++){
+        for(int y = 0; y < gridSize.y; y++){
+            for(int z = 0; z < gridSize.z; z++){
+
+                if(x == ((int)gridSize.x)/2 && z == ((int)gridSize.z)/2 && y>10){
+                    voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
+                }
+                if(y<=10){
+                    voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = 1;
+                }
+
+
+            }
+        }
+    }
 
     std::cout << "Grid created" << std::endl;
 
