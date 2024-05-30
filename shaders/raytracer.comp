@@ -40,9 +40,9 @@ const float M_PI = 3.14159265358979323846;
 
 const Material[] materials = {
     Material(vec3(0,0,0), 0, 0, vec3(1), 0),
-    Material(vec3(0.7,0.4,0), 1, 0, vec3(1,0,0), 0),
-    Material(vec3(0,0.7,0.1), 1, 0, vec3(0,1,0), 0),
-    Material(vec3(0,0.2,0.7), 1, 0, vec3(0,0,1), 0),
+    Material(vec3(0.7,0.4,0), 0.98, 0, vec3(1,0,0), 0),
+    Material(vec3(0,0.7,0.1), 0.97, 0, vec3(0,1,0), 0),
+    Material(vec3(0,0.2,0.7), 0.99, 0, vec3(0,0,1), 0),
 };
 
 
@@ -184,7 +184,7 @@ uint PCGHash(uint input)
 
 float randFloat(inout uint seed){
     seed = PCGHash(seed);
-    return float(seed)/float(0xFFFFFFFF);
+    return float(seed)/float(0xFFFFFFFFu);
 }
 
 vec3 randSphere(inout uint seed){
@@ -219,7 +219,6 @@ void main() {
     vec4 target = inverseProjectionMatrix * vec4(coord.x, coord.y, 1, 1);
     vec3 cameraRayDirection = normalize(vec3(inverseViewMatrix * vec4(normalize(vec3(target) / target.w), 0)));
 
-
     ray.origin = cameraPosition;
     ray.direction = cameraRayDirection;
     HitPayload hitPayload;
@@ -242,14 +241,14 @@ void main() {
         contribution *= material.albedo;
         light += material.emissionColor*material.emissionPower;
 
-        if(j == bounces - 1){
-            light += backgroundColor * contribution;
-            break;
-        }
-
         ray.origin = hitPayload.position + hitPayload.normal * 0.001;
-//        ray.direction =  reflect(ray.direction, hitPayload.normal + material.roughness*randVec3(seed)/5.0);
-        ray.direction = randHemisphere(seed, hitPayload.normal);
+
+        float diffuse = randFloat(seed);
+        if(material.roughness >= diffuse){
+            ray.direction = randHemisphere(seed, hitPayload.normal);
+        }
+        else
+            ray.direction = reflect(ray.direction, hitPayload.normal);
     }
 
 
