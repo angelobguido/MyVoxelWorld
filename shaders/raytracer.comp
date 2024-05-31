@@ -1,5 +1,8 @@
 #version 430
 
+#define BRICK_SIZE 8
+#define EPSILON 1e-3
+
 struct Ray {
     vec3 origin;
     vec3 direction;
@@ -20,12 +23,27 @@ struct Material {
     float emissionPower;
 };
 
+struct Brick {
+    int offSet;
+    int type;
+};
+
 layout(local_size_x = 8, local_size_y = 8) in;
 
 layout(rgba32f, binding = 0) uniform image2D colorbuffer;
+
 layout(std430, binding = 1) readonly buffer sceneData{
     int[] voxelGrid;
 };
+
+layout(std430, binding = 2) readonly buffer sceneDataBrick{
+    Brick[] brickGrid;
+};
+
+layout(std430, binding = 3) readonly buffer sceneDataVoxels{
+    int[] voxelInBrickGrid;
+};
+
 uniform ivec3 gridSize;
 
 uniform vec3 cameraPosition;
@@ -34,15 +52,16 @@ uniform mat4 inverseViewMatrix;
 uniform int rendererRandom;
 uniform int maxAccumulations;
 
-const int bounces = 5;
+const int bounces = 3;
 const vec3 backgroundColor = vec3(0.6, 0.7, 0.9);
 const float M_PI = 3.14159265358979323846;
 
 const Material[] materials = {
     Material(vec3(0,0,0), 0, 0, vec3(1), 0),
-    Material(vec3(0.7,0.4,0), 0.98, 0, vec3(1,0,0), 0),
-    Material(vec3(0,0.7,0.1), 0.97, 0, vec3(0,1,0), 0),
-    Material(vec3(0,0.2,0.7), 0.99, 0, vec3(0,0,1), 0),
+    Material(vec3(0.7,0.4,0), 0.99, 0, vec3(1,0,0), 0),
+    Material(vec3(0,0.7,0.1), 0.7, 0, vec3(0,1,0), 0),
+    Material(vec3(1,1,1), 0, 0, vec3(1,1,1), 5),
+    Material(vec3(0.7,0.7,0.9), 0.1, 0, vec3(1,1,1), 0)
 };
 
 
@@ -79,8 +98,7 @@ bool intersectGridBounds(Ray ray, out ivec3 voxelPosition, out float tEntry, out
 
     vec3 intersectionPoint = ray.origin + ray.direction * tEntry;
 
-    const float epsilon = 1e-4;
-    intersectionPoint += epsilon * normalize(ray.direction);
+    intersectionPoint += EPSILON * normalize(ray.direction);
 
     voxelPosition = ivec3(floor(intersectionPoint));
 
@@ -93,9 +111,16 @@ HitPayload traceRay(Ray ray) {
     hitPayload.normal = vec3(0.0);
     hitPayload.materialIndex = 0;
 
+    Brick brick;
+    bool brickMode = false;
+
+    ivec3 brickNum = gridSize/BRICK_SIZE;
+
     ivec3 voxelPosition;
+    ivec3 brickPosition;
     float t = 0;
     vec3 normal = vec3(0);
+    vec3 position;
 
     vec3 invDir = 1.0 / ray.direction;
     ivec3 stepInGrid = ivec3(sign(ray.direction));
@@ -113,11 +138,25 @@ HitPayload traceRay(Ray ray) {
             hitPayload.hitDistance = -1;
             return hitPayload;
         }
+    }
 
+    brickPosition = voxelPosition/BRICK_SIZE;
+    brick = brickGrid[brickPosition.x + brickPosition.z*brickNum.x + brickPosition.y*brickNum.x*brickNum.z];
+    if(brick.type != -1 && brick.type != 0){
+        hitPayload.materialIndex = voxelGrid[voxelPosition.x + voxelPosition.z * gridSize.x + voxelPosition.y * gridSize.x * gridSize.z];
+        hitPayload.hitDistance = t;
+        hitPayload.normal = normalize(normal);
+        hitPayload.position = ray.direction * t + ray.origin;
+        return hitPayload; // Hit
     }
 
     // Calculate tMax and tDelta
-    vec3 tMax = (vec3(voxelPosition + stepInGrid*0.5 + 0.5) - ray.origin) * invDir;
+    vec3 tMax = (vec3((voxelPosition) + (stepInGrid*0.5 + 0.5) ) - ray.origin) * invDir;
+    if(brick.type != -1){
+        tMax = (vec3((voxelPosition-voxelPosition%BRICK_SIZE) + (stepInGrid*0.5 + 0.5)*BRICK_SIZE ) - ray.origin) * invDir;
+        brickMode = true;
+    }
+
     vec3 tDelta = abs(invDir);
 
     int i = 0;
@@ -125,47 +164,123 @@ HitPayload traceRay(Ray ray) {
     while (i<10000) {
         i++;
 
-        // Check if the current voxel is out of the grid bounds
-        if (voxelPosition.x < 0 || voxelPosition.x >= gridSize.x ||
-        voxelPosition.y < 0 || voxelPosition.y >= gridSize.y ||
-        voxelPosition.z < 0 || voxelPosition.z >= gridSize.z) {
-            hitPayload.hitDistance = -1;
-            return hitPayload;
-        }
+        if(brickMode){
 
-        // Check if the current voxel is a block
-        if (voxelGrid[voxelPosition.x + voxelPosition.z * gridSize.x + voxelPosition.y * gridSize.x * gridSize.z] != 0) {
-            hitPayload.materialIndex = voxelGrid[voxelPosition.x + voxelPosition.z * gridSize.x + voxelPosition.y * gridSize.x * gridSize.z];
-            hitPayload.hitDistance = t;
-            hitPayload.normal = normal;
-            hitPayload.position = ray.direction * t + ray.origin;
-            return hitPayload; // Hit
-        }
-
-        // Traverse the grid
-        if (tMax.x < tMax.y) {
-            if (tMax.x < tMax.z) {
-                voxelPosition.x += stepInGrid.x;
-                t = tMax.x;
-                normal = vec3(-stepInGrid.x, 0, 0);
-                tMax.x += tDelta.x;
-            } else {
-                voxelPosition.z += stepInGrid.z;
-                t = tMax.z;
-                normal = vec3(0, 0, -stepInGrid.z);
-                tMax.z += tDelta.z;
+            // Check if the current brick is out of the grid bounds
+            if (brickPosition.x < 0 || brickPosition.x >= brickNum.x ||
+            brickPosition.y < 0 || brickPosition.y >= brickNum.y ||
+            brickPosition.z < 0 || brickPosition.z >= brickNum.z) {
+                hitPayload.hitDistance = -1;
+                return hitPayload;
             }
-        } else {
-            if (tMax.y < tMax.z) {
-                voxelPosition.y += stepInGrid.y;
-                t = tMax.y;
-                normal = vec3(0, -stepInGrid.y, 0);
-                tMax.y += tDelta.y;
-            } else {
-                voxelPosition.z += stepInGrid.z;
-                t = tMax.z;
-                normal = vec3(0, 0, -stepInGrid.z);
-                tMax.z += tDelta.z;
+
+            // Check if the current brick is only a block
+            brick = brickGrid[brickPosition.x + brickPosition.z*brickNum.x + brickPosition.y*brickNum.x*brickNum.z];
+            if (brick.type != 0 && brick.type != -1) {
+                hitPayload.materialIndex = brick.type;
+                hitPayload.hitDistance = t;
+                hitPayload.normal = normalize(normal);
+                hitPayload.position = ray.direction * t + ray.origin;
+                return hitPayload; // Hit
+            }
+
+            //Switch to voxelMode
+            if (brick.type == -1){
+
+                vec3 intersectionPoint = ray.origin + ray.direction * t;
+                intersectionPoint += EPSILON * normalize(ray.direction);
+                voxelPosition = ivec3(floor(intersectionPoint));
+
+                tMax = (vec3((voxelPosition) + (stepInGrid*0.5 + 0.5) ) - ray.origin) * invDir;
+
+                brickMode = false;
+
+            }
+            else{
+
+                // Traverse the grid with brick steps
+                if (tMax.x < tMax.y) {
+                    if (tMax.x < tMax.z) {
+                        brickPosition.x += stepInGrid.x;
+                        t = tMax.x;
+                        normal = vec3(-stepInGrid.x, 0, 0);
+                        tMax.x += tDelta.x*BRICK_SIZE;
+                    } else {
+                        brickPosition.z += stepInGrid.z;
+                        t = tMax.z;
+                        normal = vec3(0, 0, -stepInGrid.z);
+                        tMax.z += tDelta.z*BRICK_SIZE;
+                    }
+                } else {
+                    if (tMax.y < tMax.z) {
+                        brickPosition.y += stepInGrid.y;
+                        t = tMax.y;
+                        normal = vec3(0, -stepInGrid.y, 0);
+                        tMax.y += tDelta.y*BRICK_SIZE;
+                    } else {
+                        brickPosition.z += stepInGrid.z;
+                        t = tMax.z;
+                        normal = vec3(0, 0, -stepInGrid.z);
+                        tMax.z += tDelta.z*BRICK_SIZE;
+                    }
+                }
+            }
+        }
+
+        else{
+
+            // Check if the current voxel is out of the grid bounds
+            if (voxelPosition.x < 0 || voxelPosition.x >= gridSize.x ||
+            voxelPosition.y < 0 || voxelPosition.y >= gridSize.y ||
+            voxelPosition.z < 0 || voxelPosition.z >= gridSize.z) {
+                hitPayload.hitDistance = -1;
+                return hitPayload;
+            }
+
+            // Check if the current voxel is a block
+            if (voxelGrid[voxelPosition.x + voxelPosition.z * gridSize.x + voxelPosition.y * gridSize.x * gridSize.z] != 0) {
+                hitPayload.materialIndex = voxelGrid[voxelPosition.x + voxelPosition.z * gridSize.x + voxelPosition.y * gridSize.x * gridSize.z];
+                hitPayload.hitDistance = t;
+                hitPayload.normal = normalize(normal);
+                hitPayload.position = ray.direction * t + ray.origin;
+                return hitPayload; // Hit
+            }
+
+            //Switch to brick mode
+            brickPosition = voxelPosition/BRICK_SIZE;
+            brick = brickGrid[brickPosition.x + brickPosition.z*brickNum.x + brickPosition.y*brickNum.x*brickNum.z];
+            if (brick.type != -1){
+                tMax = (vec3((voxelPosition-voxelPosition%BRICK_SIZE) + (stepInGrid*0.5 + 0.5)*BRICK_SIZE ) - ray.origin) * invDir;
+                brickMode = true;
+            }
+            else{
+
+                // Traverse the grid with voxel steps
+                if (tMax.x < tMax.y) {
+                    if (tMax.x < tMax.z) {
+                        voxelPosition.x += stepInGrid.x;
+                        t = tMax.x;
+                        normal = vec3(-stepInGrid.x, 0, 0);
+                        tMax.x += tDelta.x;
+                    } else {
+                        voxelPosition.z += stepInGrid.z;
+                        t = tMax.z;
+                        normal = vec3(0, 0, -stepInGrid.z);
+                        tMax.z += tDelta.z;
+                    }
+                } else {
+                    if (tMax.y < tMax.z) {
+                        voxelPosition.y += stepInGrid.y;
+                        t = tMax.y;
+                        normal = vec3(0, -stepInGrid.y, 0);
+                        tMax.y += tDelta.y;
+                    } else {
+                        voxelPosition.z += stepInGrid.z;
+                        t = tMax.z;
+                        normal = vec3(0, 0, -stepInGrid.z);
+                        tMax.z += tDelta.z;
+                    }
+                }
             }
         }
 
@@ -238,17 +353,15 @@ void main() {
 
         material = materials[hitPayload.materialIndex];
 
-        contribution *= material.albedo;
-        light += material.emissionColor*material.emissionPower;
-
         ray.origin = hitPayload.position + hitPayload.normal * 0.001;
 
-        float diffuse = randFloat(seed);
-        if(material.roughness >= diffuse){
-            ray.direction = randHemisphere(seed, hitPayload.normal);
-        }
-        else
-            ray.direction = reflect(ray.direction, hitPayload.normal);
+        contribution *= material.albedo;
+        light += material.emissionColor*material.emissionPower*contribution;
+
+        vec3 perfectReflection = reflect(ray.direction, hitPayload.normal);
+
+        ray.direction = normalize(randHemisphere(seed, hitPayload.normal) + perfectReflection*(1/(material.roughness+EPSILON)-1));
+
     }
 
 

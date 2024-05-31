@@ -9,7 +9,7 @@
 
 class Camera {
 
-    const float speed = 10;
+    const float speed = 50;
     const float sensitivity = 0.1;
     const float near = 0.01;
     const float far = 1000;
@@ -39,7 +39,7 @@ private:
     glm::mat4 getProjectionMatrix();
     glm::mat4 getViewMatrix();
 
-    glm::vec3 position = glm::vec3(100,120,100);
+    glm::vec3 position = glm::vec3(5,120,5);
     glm::vec3 front = glm::vec3(0,0,-1);
     glm::vec3 up = glm::vec3(0,1,0);
     float fov = 45;

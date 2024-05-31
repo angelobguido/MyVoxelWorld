@@ -12,14 +12,24 @@
 
 class VoxelWorldBuilder {
 
+    struct Brick{
+        int offSet;
+        int type;
+    };
+
 public:
-    std::vector<int> voxelGrid;
+    std::vector<Brick> brickGrid;
+    std::vector<int> voxelInBrickGrid;
     glm::ivec3 gridSize;
     ShaderProgram* raytracer;
-    VoxelWorldBuilder(ShaderProgram* raytracer, int gridSizeX, int gridSizeY, int gridSizeZ);
+    VoxelWorldBuilder(ShaderProgram* raytracer, int gridSizeX, int gridSizeY, int gridSizeZ, int brickSize);
     ~VoxelWorldBuilder();
     void build();
     unsigned int buffer;
+    unsigned int voxelsInBrickBuffer;
+    unsigned int brickBuffer;
+private:
+    int brickSize;
 
 };
 

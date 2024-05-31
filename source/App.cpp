@@ -195,6 +195,6 @@ void App::recreateColorBuffer(int width, int height) {
 }
 
 void App::setUpBuilder() {
-    builder = new VoxelWorldBuilder(raytracerShader, gridSizeX, gridSizeY, gridSizeZ);
+    builder = new VoxelWorldBuilder(raytracerShader, gridSizeX, gridSizeY, gridSizeZ, 8);
 }
 
