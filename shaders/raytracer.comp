@@ -52,11 +52,16 @@ uniform mat4 inverseViewMatrix;
 uniform int rendererRandom;
 uniform int maxAccumulations;
 
-const int bounces = 3;
+const int bounces = 50;
 const vec3 backgroundColor = vec3(0.6, 0.7, 0.9);
 const float M_PI = 3.14159265358979323846;
+
+//Direct light
 const vec3 playerEmissionColor = vec3(1);
 const float playerEmissionPower = 10;
+const vec3 sunEmissionColor = vec3(1);
+const float sunEmissionPower = 0.5;
+const vec3 sunDirection = normalize(vec3(1,-1,1));
 
 const Material[] materials = {
     Material(vec3(0,0,0), 0, 0, vec3(1), 0),
@@ -347,6 +352,11 @@ void main() {
 
     for (int j = 0; j < bounces; j++){
         seed += j;
+        //Russian Roulette stop the ray if the contribution is too low
+        float r = randFloat(seed);
+        if(r > length(contribution))
+            break;
+
         hitPayload = traceRay(ray);
 
         if (hitPayload.hitDistance < 0) {
@@ -359,6 +369,7 @@ void main() {
         ray.origin = hitPayload.position + hitPayload.normal * 0.001;
 
         contribution *= material.albedo;
+
         light += material.emissionColor*material.emissionPower*contribution;
 
         vec3 perfectReflection = reflect(ray.direction, hitPayload.normal);
@@ -368,7 +379,12 @@ void main() {
         ray.direction = (cameraPosition - ray.origin);
         float distanceToPlayer = length(ray.direction);
         hitPayload = traceRay(ray);
-        light += float(hitPayload.hitDistance < 0 || hitPayload.hitDistance > distanceToPlayer) * playerEmissionColor*playerEmissionPower*contribution*dot(normalize(ray.direction), normal)/(M_PI*distanceToPlayer*distanceToPlayer);
+        light += float(hitPayload.hitDistance < 0 || hitPayload.hitDistance > distanceToPlayer) * playerEmissionColor*playerEmissionPower*contribution*max(0,dot(normalize(ray.direction), normal))/(4*M_PI*distanceToPlayer*distanceToPlayer);
+
+        ray.direction = -sunDirection;
+        hitPayload = traceRay(ray);
+        light += float(hitPayload.hitDistance < 0) * sunEmissionColor*sunEmissionPower*contribution*max(0,dot(normalize(ray.direction), normal));
+
 
         //Indirect light continue
         ray.direction = normalize(randHemisphere(seed, normal) + perfectReflection*(1/(material.roughness+EPSILON)-1));

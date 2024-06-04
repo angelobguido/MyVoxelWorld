@@ -25,7 +25,7 @@ void VoxelWorldBuilder::build() {
                 const int noise = (int) ((perlin.noise2D((x * 0.01), (z * 0.01)) * 0.5 + 0.5) * gridSize.y);
                 if (y == noise){
                     voxelGrid[x + z * gridSize.x + y * gridSize.x * gridSize.z] = 2;
-                    if(x%10==0 && z%10==0)
+                    if(x%8==0&&z%8==0)
                         voxelGrid[x + z * gridSize.x + y * gridSize.x * gridSize.z] = 3;
                 }
 
