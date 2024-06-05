@@ -68,7 +68,7 @@ const Material[] materials = {
     Material(vec3(0.7,0.4,0), 0.99, 0, vec3(1,0,0), 0),
     Material(vec3(0,0.7,0.1), 0.7, 0, vec3(0,1,0), 0),
     Material(vec3(1,1,1), 0, 0, vec3(1,1,1), 5),
-    Material(vec3(0.7,0.7,0.9), 0.2, 0, vec3(1,1,1), 0)
+    Material(vec3(0.7,0.7,0.9), 0, 0, vec3(1,1,1), 0)
 };
 
 
@@ -112,7 +112,7 @@ bool intersectGridBounds(Ray ray, out ivec3 voxelPosition, out float tEntry, out
     return true;
 }
 
-HitPayload traceRay(Ray ray) {
+HitPayload traceRayVoxelGrid(Ray ray) {
     HitPayload hitPayload;
     hitPayload.hitDistance = 0.0;
     hitPayload.normal = vec3(0.0);
@@ -321,6 +321,103 @@ vec3 randSphere(inout uint seed){
 vec3 randHemisphere(inout uint seed, vec3 normal){
     vec3 v = randSphere(seed);
     return v * sign(dot(v, normal));
+}
+
+float sdfSphere(vec3 position, float radius){
+    return length(position) - radius;
+}
+
+float sdfBox(vec3 position, vec3 dimensions){
+    vec3 q = abs(position) - dimensions;
+    return length(max(q,0)) + min(max(q.x,max(q.y,q.z)),0);
+}
+
+float sdfSolidAngle(vec3 position, float angle, float ra){
+    vec2 c = vec2(sin(angle), cos(angle));
+    vec2 q = vec2( length(position.xz), position.y );
+    float l = length(q) - ra;
+    float m = length(q - c*clamp(dot(q,c),0.0,ra) );
+    return max(l,m*sign(c.y*q.x-c.x*q.y));
+}
+
+float map(vec3 position){
+    float solidAngle = sdfSolidAngle(position - vec3(50,50,70), M_PI/3, 10);
+    float box = sdfBox(position - vec3(60,50,60), vec3(2));
+
+    return min(solidAngle,box);
+}
+
+vec3 calculateNormal(vec3 position){
+    vec2 h = vec2(EPSILON,0);
+    return normalize(vec3( map(position+h.xyy) - map(position-h.xyy), map(position+h.yxy) - map(position-h.yxy), map(position+h.yyx) - map(position-h.yyx) ));
+}
+
+//To render off grid objects
+HitPayload traceRayOffGrid(Ray ray){
+    HitPayload hitPayload;
+    hitPayload.hitDistance = 0.0;
+    hitPayload.normal = vec3(0.0);
+    hitPayload.materialIndex = 0;
+    float t = 0;
+
+    for(int i = 0; i < 80; i++){
+        vec3 p = ray.origin + ray.direction*t;
+
+        float d = map(p);
+
+        t += d;
+
+        if(t > 1000){
+            hitPayload.hitDistance = -1;
+            return hitPayload;
+        }
+
+        if(d < EPSILON){
+            t -= 3*EPSILON;
+            hitPayload.hitDistance = t;
+            hitPayload.position = ray.origin + ray.direction*t;
+            hitPayload.normal = calculateNormal(p);
+            hitPayload.materialIndex = 4;
+            return hitPayload;
+        }
+
+    }
+
+    hitPayload.hitDistance = -1;
+    return hitPayload;
+
+}
+
+HitPayload traceRay(Ray ray){
+
+    HitPayload hitVoxelGrid = traceRayVoxelGrid(ray);
+    HitPayload hitOffGrid = traceRayOffGrid(ray);
+
+    //Test if both rays hit nothing
+    if(hitVoxelGrid.hitDistance<0 && hitOffGrid.hitDistance<0){
+        return hitVoxelGrid; //Return any of the hits
+    }
+
+    //Test if it hit first at the voxel grid
+    if(hitVoxelGrid.hitDistance < hitOffGrid.hitDistance){
+        if(hitVoxelGrid.hitDistance>0)
+            return hitVoxelGrid;
+        else
+            return hitOffGrid;
+    }
+
+    //Test if it hit first at the off grid
+    if(hitVoxelGrid.hitDistance > hitOffGrid.hitDistance && hitOffGrid.hitDistance>0){
+        if(hitOffGrid.hitDistance>0)
+            return hitOffGrid;
+        else
+            return hitVoxelGrid;
+    }
+
+
+
+    return hitVoxelGrid;
+
 }
 
 void main() {
