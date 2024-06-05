@@ -116,12 +116,16 @@ void Detector::detectBlockAndBreak(glm::vec3 origin, glm::vec3 direction) {
     BlockDetection blockDetection = detectBlock(origin, direction);
 
     if(blockDetection.hit){
-        builder->breakBlock(blockDetection.position);
+        builder->changeBlock(blockDetection.position, 0);
     }
 
 }
 
 void Detector::detectBlockAndPlace(glm::vec3 origin, glm::vec3 direction, int blockType) {
+    BlockDetection blockDetection = detectBlock(origin, direction);
 
+    if(blockDetection.hit){
+        builder->changeBlock(blockDetection.position + blockDetection.normal, blockType);
+    }
 }
 

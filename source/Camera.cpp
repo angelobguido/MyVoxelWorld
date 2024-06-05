@@ -126,6 +126,15 @@ void Camera::update(float deltaTime, Detector &detector) {
                 detector.detectBlockAndBreak(position, front);
             }
         }
+
+        // Place block
+        if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS){
+            if(actionTimer < 0){
+                // Reset timer
+                actionTimer = actionCooldownTime;
+                detector.detectBlockAndPlace(position, front, 4);
+            }
+        }
     }
 
 

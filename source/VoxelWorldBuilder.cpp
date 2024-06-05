@@ -135,15 +135,19 @@ VoxelWorldBuilder::~VoxelWorldBuilder() {
     glDeleteBuffers(1, &buffer);
 }
 
-void VoxelWorldBuilder::breakBlock(glm::ivec3 position) {
-    voxelGrid[position.x + position.z * gridSize.x + position.y * gridSize.x * gridSize.z] = 0;
+void VoxelWorldBuilder::changeBlock(glm::ivec3 position, int blockType) {
+    voxelGrid[position.x + position.z * gridSize.x + position.y * gridSize.x * gridSize.z] = blockType;
 
-    Brick& brick = brickGrid[(position.x/brickSize) + (position.z/brickSize) * gridSize.x + (position.y/brickSize) * gridSize.x * gridSize.z];
+    int brickSizeX = gridSize.x/brickSize;
+    int brickSizeY = gridSize.y/brickSize;
+    int brickSizeZ = gridSize.z/brickSize;
+
+    Brick& brick = brickGrid[(position.x/brickSize) + (position.z/brickSize) * brickSizeX + (position.y/brickSize) * brickSizeX * brickSizeZ];
 
     glm::ivec3 positionInsideBrick = position%brickSize;
 
     if(brick.type == -1){
-        voxelInBrickGrid[brick.offSet + (positionInsideBrick.x) + (positionInsideBrick.z) * gridSize.x + (positionInsideBrick.y) * gridSize.x * gridSize.z] = 0;
+        voxelInBrickGrid[brick.offSet + (positionInsideBrick.x) + (positionInsideBrick.z) * brickSize + (positionInsideBrick.y) * brickSize * brickSize] = blockType;
     }else{
         int lastType = brick.type;
         brick.type = -1;
@@ -155,7 +159,7 @@ void VoxelWorldBuilder::breakBlock(glm::ivec3 position) {
 
                     voxelInBrickGrid[brick.offSet + x + z * brickSize + y * brickSize * brickSize] = lastType;
                     if((positionInsideBrick.x == x) && (positionInsideBrick.y == y) && (positionInsideBrick.z == z))
-                        voxelInBrickGrid[brick.offSet + x + z * brickSize + y * brickSize * brickSize] = 0;
+                        voxelInBrickGrid[brick.offSet + x + z * brickSize + y * brickSize * brickSize] = blockType;
                 }
             }
         }
@@ -163,10 +167,6 @@ void VoxelWorldBuilder::breakBlock(glm::ivec3 position) {
     }
 
     updateBuffers();
-}
-
-void VoxelWorldBuilder::placeBlock(glm::ivec3 position, int blockType) {
-
 }
 
 void VoxelWorldBuilder::updateBuffers() {

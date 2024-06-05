@@ -22,7 +22,7 @@ public:
     ~VoxelWorldBuilder();
     void build();
     void breakBlock(glm::ivec3 position);
-    void placeBlock(glm::ivec3 position, int blockType);
+    void changeBlock(glm::ivec3 position, int blockType);
 
     std::vector<Brick> brickGrid;
     std::vector<int> voxelInBrickGrid;

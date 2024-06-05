@@ -59,7 +59,7 @@ const float M_PI = 3.14159265358979323846;
 
 //Direct light
 const vec3 playerEmissionColor = vec3(1);
-const float playerEmissionPower = 10;
+const float playerEmissionPower = 50;
 const vec3 sunEmissionColor = vec3(1);
 const float sunEmissionPower = 0.5;
 const vec3 sunDirection = normalize(vec3(1,-1,1));
