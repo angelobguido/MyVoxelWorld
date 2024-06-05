@@ -10,10 +10,11 @@
 
 class Camera {
 
-    const float speed = 50;
+    const float speed = 10;
     const float sensitivity = 0.1;
     const float near = 0.01;
     const float far = 1000;
+    const float actionCooldownTime = 0.5;
 
     const int WIDTH = 800;
     const int HEIGHT = 600;
@@ -48,6 +49,8 @@ private:
     double yaw = -90;
     double pitch = 0;
     bool fullscreen = false;
+
+    float actionTimer = 0;
 
     glm::vec3 objectPosition = glm::vec3(50,50,70);
 

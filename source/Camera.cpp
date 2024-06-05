@@ -13,6 +13,8 @@ void Camera::update(float deltaTime, Detector &detector) {
 
     glm::vec3 right = glm::normalize(glm::cross(front, up));
 
+    // Handle cooldown
+    actionTimer -= deltaTime;
 
     // Handle camera movement
     {
@@ -118,7 +120,11 @@ void Camera::update(float deltaTime, Detector &detector) {
     {
         // Break block
         if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS){
-            detector.detectBlockAndBreak(position, front);
+            if(actionTimer < 0){
+                // Reset timer
+                actionTimer = actionCooldownTime;
+                detector.detectBlockAndBreak(position, front);
+            }
         }
     }
 
