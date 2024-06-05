@@ -66,7 +66,7 @@ void App::setUpOpenGl() {
     glDisable(GL_DEPTH_TEST);
 
     // Create the shaders, the screen shader is used to draw the screen texture and the raytracer shader is used to create the screen texture with the ray tracing techniques.
-    screenShader = new ShaderProgram({{"./shaders/median.frag", GL_FRAGMENT_SHADER}, {"./shaders/vertex.vert", GL_VERTEX_SHADER}});
+    screenShader = new ShaderProgram({{"./shaders/fragment.frag", GL_FRAGMENT_SHADER}, {"./shaders/vertex.vert", GL_VERTEX_SHADER}});
     raytracerShader = new ShaderProgram({{"./shaders/raytracer.comp", GL_COMPUTE_SHADER}});
 
 
