@@ -17,9 +17,10 @@ Renderer::Renderer(ShaderProgram *screenShader, ShaderProgram *raytracerShader, 
 
 }
 
-void Renderer::update(bool cameraMoved) {
+void Renderer::update(Detector &detector) {
 
-    if(cameraMoved){
+    // Reset accumulation frame buffer if something has moved
+    if(detector.getSomethingMoved()){
         glBindFramebuffer(GL_FRAMEBUFFER, *accumulationFrameBuffer);
         glClear(GL_COLOR_BUFFER_BIT);
         accumulationCounter = 0;
@@ -36,8 +37,8 @@ void Renderer::update(bool cameraMoved) {
     glBindFramebuffer(GL_FRAMEBUFFER, *accumulationFrameBuffer);
     glEnable(GL_BLEND);
 
-    if (cameraMoved) {
-        // Direct copy if the camera has moved recently
+    if (detector.getSomethingMoved()) {
+        // Direct copy if something has moved recently
         glBlendFunc(GL_ONE, GL_ZERO);
     } else {
         glBlendColor(1,1,1,1/float(accumulationCounter));

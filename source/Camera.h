@@ -5,6 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include "ShaderProgram.h"
+#include "Detector.h"
 #include <iostream>
 
 class Camera {
@@ -20,7 +21,7 @@ class Camera {
 public:
     Camera(ShaderProgram* raytracerShader, GLFWwindow* window);
 
-    bool update(float deltaTime);
+    void update(float deltaTime, Detector &detector);
 
     void move(float deltaTime, int key);
     void look(double mouseX, double mouseY);
@@ -28,8 +29,6 @@ public:
 
     void recalculateProjection(int width, int height);
     void recalculateView();
-
-    bool cameraMoved = true;
 
 private:
 
@@ -49,6 +48,8 @@ private:
     double yaw = -90;
     double pitch = 0;
     bool fullscreen = false;
+
+    glm::vec3 objectPosition = glm::vec3(50,50,70);
 
     glm::mat4 inverseProjectionMatrix;
     glm::mat4 inverseViewMatrix;

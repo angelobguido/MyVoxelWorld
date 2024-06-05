@@ -47,6 +47,7 @@ layout(std430, binding = 3) readonly buffer sceneDataVoxels{
 uniform ivec3 gridSize;
 
 uniform vec3 cameraPosition;
+uniform vec3 objectPosition;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform int rendererRandom;
@@ -62,6 +63,8 @@ const float playerEmissionPower = 10;
 const vec3 sunEmissionColor = vec3(1);
 const float sunEmissionPower = 0.5;
 const vec3 sunDirection = normalize(vec3(1,-1,1));
+
+const int objectMaterial = 3;
 
 const Material[] materials = {
     Material(vec3(0,0,0), 0, 0, vec3(1), 0),
@@ -341,10 +344,9 @@ float sdfSolidAngle(vec3 position, float angle, float ra){
 }
 
 float map(vec3 position){
-    float solidAngle = sdfSolidAngle(position - vec3(50,50,70), M_PI/3, 10);
-    float box = sdfBox(position - vec3(60,50,60), vec3(2));
+    float solidAngle = sdfSolidAngle(position - objectPosition, M_PI/3, 10);
 
-    return min(solidAngle,box);
+    return solidAngle;
 }
 
 vec3 calculateNormal(vec3 position){
@@ -377,7 +379,7 @@ HitPayload traceRayOffGrid(Ray ray){
             hitPayload.hitDistance = t;
             hitPayload.position = ray.origin + ray.direction*t;
             hitPayload.normal = calculateNormal(p);
-            hitPayload.materialIndex = 4;
+            hitPayload.materialIndex = objectMaterial;
             return hitPayload;
         }
 
@@ -449,9 +451,9 @@ void main() {
 
     for (int j = 0; j < bounces; j++){
         seed += j;
-        //Russian Roulette stop the ray if the contribution is too low
+        //Russian Roulette stop the ray by chance if the contribution is too low
         float r = randFloat(seed);
-        if(r > length(contribution))
+        if(r > length(contribution)/length(vec3(1)))
             break;
 
         hitPayload = traceRay(ray);

@@ -4,6 +4,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "ShaderProgram.h"
+#include "Detector.h"
 #include <utility>
 #include <random>
 
@@ -14,7 +15,7 @@ class Renderer {
 public:
     Renderer(ShaderProgram *screenShader, ShaderProgram *raytracerShader, GLFWwindow *window, unsigned int *colorBuffer,
              unsigned int *sceneFrameBuffer, unsigned int *accumulationColorBuffer, unsigned int *accumulationFrameBuffer);
-    void update(bool cameraMoved);
+    void update(Detector &detector);
     void recalculateWorkGroups(int width, int height);
 
 private:

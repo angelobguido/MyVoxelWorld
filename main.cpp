@@ -2,6 +2,7 @@
 
 int main(){
 
+    //Create an app with a world size of the desired values.
     App app(100,100,100);
 
     app.setUpOpenGl();

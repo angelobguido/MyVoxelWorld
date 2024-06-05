@@ -2,11 +2,10 @@
 
 VoxelWorldBuilder::VoxelWorldBuilder(ShaderProgram *raytracer, int gridSizeX, int gridSizeY, int gridSizeZ, int brickSize) : raytracer(raytracer), gridSize({gridSizeX-gridSizeX%brickSize, gridSizeY-gridSizeY%brickSize, gridSizeZ-gridSizeZ%brickSize}), brickSize(brickSize) {
     brickGrid = std::vector<Brick>((gridSize.x/brickSize)*(gridSize.y/brickSize)*(gridSize.z/brickSize), Brick());
+    voxelGrid = std::vector<int>(gridSize.x*gridSize.y*gridSize.z, 0);
 }
 
 void VoxelWorldBuilder::build() {
-
-    std::vector<int> voxelGrid(gridSize.x*gridSize.y*gridSize.z, 0);
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -39,6 +38,21 @@ void VoxelWorldBuilder::build() {
 
 
 
+            }
+        }
+    }
+
+    // Create a house
+    glm::ivec3 houseEdgePosition(30,50,50);
+    glm::ivec3 houseDimension(20,6,10);
+    for (int x = 0; x < houseDimension.x; x++) {
+        for (int y = 0; y < houseDimension.y; y++) {
+            for (int z = 0; z < houseDimension.z; z++) {
+
+                if(x == 0 || ((houseDimension.x-1-x)!=0 && (houseDimension.y-1-y)!=0 && (houseDimension.z-1-z)!=0 && (y!=0) && (z!=0) ))
+                    voxelGrid[(x+houseEdgePosition.x) + (z+houseEdgePosition.z) * gridSize.x + (y+houseEdgePosition.y) * gridSize.x * gridSize.z] = 0;
+                else
+                    voxelGrid[(x+houseEdgePosition.x) + (z+houseEdgePosition.z) * gridSize.x + (y+houseEdgePosition.y) * gridSize.x * gridSize.z] = 1;
             }
         }
     }
@@ -119,4 +133,57 @@ void VoxelWorldBuilder::build() {
 
 VoxelWorldBuilder::~VoxelWorldBuilder() {
     glDeleteBuffers(1, &buffer);
+}
+
+void VoxelWorldBuilder::breakBlock(glm::ivec3 position) {
+    voxelGrid[position.x + position.z * gridSize.x + position.y * gridSize.x * gridSize.z] = 0;
+
+    Brick& brick = brickGrid[(position.x/brickSize) + (position.z/brickSize) * gridSize.x + (position.y/brickSize) * gridSize.x * gridSize.z];
+
+    glm::ivec3 positionInsideBrick = position%brickSize;
+
+    if(brick.type == -1){
+        voxelInBrickGrid[brick.offSet + (positionInsideBrick.x) + (positionInsideBrick.z) * gridSize.x + (positionInsideBrick.y) * gridSize.x * gridSize.z] = 0;
+    }else{
+        int lastType = brick.type;
+        brick.type = -1;
+        brick.offSet = voxelInBrickGrid.size();
+
+        for (int x = 0; x < brickSize; x++) {
+            for (int y = 0; y < brickSize; y++) {
+                for (int z = 0; z < brickSize; z++) {
+
+                    voxelInBrickGrid[brick.offSet + x + z * brickSize + y * brickSize * brickSize] = lastType;
+                    if((positionInsideBrick.x == x) && (positionInsideBrick.y == y) && (positionInsideBrick.z == z))
+                        voxelInBrickGrid[brick.offSet + x + z * brickSize + y * brickSize * brickSize] = 0;
+                }
+            }
+        }
+
+    }
+
+    updateBuffers();
+}
+
+void VoxelWorldBuilder::placeBlock(glm::ivec3 position, int blockType) {
+
+}
+
+void VoxelWorldBuilder::updateBuffers() {
+    glGenBuffers(1, &buffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, buffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, voxelGrid.size()*sizeof(int), voxelGrid.data(), GL_DYNAMIC_READ);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, buffer);
+
+    glGenBuffers(1, &brickBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, brickBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, brickGrid.size()*sizeof(Brick), brickGrid.data(), GL_DYNAMIC_READ);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 2, brickBuffer);
+
+    glGenBuffers(1, &voxelsInBrickBuffer);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, voxelsInBrickBuffer);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, voxelInBrickGrid.size()*sizeof(int), voxelInBrickGrid.data(), GL_DYNAMIC_READ);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, voxelsInBrickBuffer);
+
+    std::cout << "Buffers updated" << std::endl;
 }

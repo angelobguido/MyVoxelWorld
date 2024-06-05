@@ -7,6 +7,7 @@
 #include "Renderer.h"
 #include "Camera.h"
 #include "VoxelWorldBuilder.h"
+#include "Detector.h"
 
 
 class App {

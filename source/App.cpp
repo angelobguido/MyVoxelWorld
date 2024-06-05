@@ -26,6 +26,8 @@ void App::run() {
     setUpCallbacks();
     builder->build();
 
+    Detector detector(builder);
+
     lastTime = glfwGetTime();
     lastTimeForFrame = lastTime;
     numFrames = 0;
@@ -34,23 +36,26 @@ void App::run() {
     while (!glfwWindowShouldClose(window)) {
 
         glfwPollEvents();
+        detector.resetMoveDetection();
 
         handleFrameTiming();
-        bool should_close = camera->update(delta);
-        if (should_close) {
+        camera->update(delta, detector);
+        if (detector.getShouldClose()) {
             break;
         }
 
-        renderer->update(camera->cameraMoved);
-//        renderer->update(false);
+        renderer->update(detector);
+
     }
 }
 
 void App::setUpOpenGl() {
 
+    // Init glew to use the OpenGL api.
     uint GlewInitResult = glewInit();
     printf("GlewStatus: %s", glewGetErrorString(GlewInitResult));
 
+    // Adjust the viewport size using the width and height of the glfw window.
     int width, height;
     glfwGetFramebufferSize(window, &width, &height);
 
@@ -60,8 +65,10 @@ void App::setUpOpenGl() {
 
     glDisable(GL_DEPTH_TEST);
 
+    // Create the shaders, the screen shader is used to draw the screen texture and the raytracer shader is used to create the screen texture with the ray tracing techniques.
     screenShader = new ShaderProgram({{"./shaders/fragment.frag", GL_FRAGMENT_SHADER}, {"./shaders/vertex.vert", GL_VERTEX_SHADER}});
     raytracerShader = new ShaderProgram({{"./shaders/raytracer.comp", GL_COMPUTE_SHADER}});
+
 
     // Generate and bind framebuffers
     glGenFramebuffers(1, &sceneFramebuffer);
@@ -125,6 +132,7 @@ void App::handleFrameTiming() {
 }
 
 void App::setUpGlfw() {
+    //Create glfw window
     glfwInit();
 
     window = glfwCreateWindow(1250, 1000, "Minha Janela", nullptr, nullptr);
