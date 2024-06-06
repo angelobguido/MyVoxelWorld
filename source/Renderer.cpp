@@ -53,8 +53,6 @@ void Renderer::update(Detector &detector) {
     glBindTexture(GL_TEXTURE_2D, *colorBuffer);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
-    glDisable(GL_BLEND);
-
     glfwSwapBuffers(window);
 
     accumulationCounter++;

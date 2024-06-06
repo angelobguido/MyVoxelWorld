@@ -46,7 +46,10 @@ void App::run() {
         }
 
         renderer->update(detector);
-
+        detector.resetMoveDetection();
+        for(int i = 0; i < 1; i++) {
+            renderer->update(detector);
+        }
     }
 }
 

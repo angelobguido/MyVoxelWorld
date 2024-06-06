@@ -70,7 +70,7 @@ const Material[] materials = {
     Material(vec3(0,0,0), 0, 0, vec3(1), 0),
     Material(vec3(0.7,0.4,0), 0.99, 0, vec3(1,0,0), 0),
     Material(vec3(0,0.7,0.1), 0.7, 0, vec3(0,1,0), 0),
-    Material(vec3(1,1,1), 0, 0, vec3(1,1,1), 2),
+    Material(vec3(0.5,0.5,0.5), 0, 0, vec3(1,1,1), 10),
     Material(vec3(0.7,0.7,0.9), 0, 0, vec3(1,1,1), 0)
 };
 
@@ -441,60 +441,67 @@ void main() {
     vec4 target = inverseProjectionMatrix * vec4(coord.x, coord.y, 1, 1);
     vec3 cameraRayDirection = normalize(vec3(inverseViewMatrix * vec4(normalize(vec3(target) / target.w), 0)));
 
-    ray.origin = cameraPosition;
-    ray.direction = cameraRayDirection;
     HitPayload hitPayload;
     Material material;
 
-    vec3 light = vec3(0);
-    vec3 contribution = vec3(1);
-    vec3 normal;
 
-    for (int j = 0; j < bounces; j++){
-        seed += j;
-        //Russian Roulette stop the ray by chance if the contribution is too low
-        float r = randFloat(seed);
-        if(r > length(contribution)/length(vec3(1)))
-            break;
+    vec3 accumulatedLight = vec3(0);
+    int numberOfAccumulationsPerRaytrace = 1;
 
-        hitPayload = traceRay(ray);
+    for(int i = 0; i < numberOfAccumulationsPerRaytrace; i++){
+        seed += i;
+        vec3 light = vec3(0);
+        vec3 contribution = vec3(1);
+        vec3 normal;
+        ray.origin = cameraPosition;
+        ray.direction = cameraRayDirection;
+        for (int j = 0; j < bounces; j++){
+            seed += j;
+            //Russian Roulette stop the ray by chance if the contribution is too low
+            float r = randFloat(seed);
+            if(r > length(contribution)/length(vec3(1))*2)
+                break;
 
-        if (hitPayload.hitDistance < 0) {
-            light += backgroundColor * contribution;
-            break;
+            hitPayload = traceRay(ray);
+
+            if (hitPayload.hitDistance < 0) {
+                light += backgroundColor * contribution;
+                break;
+            }
+
+            material = materials[hitPayload.materialIndex];
+            vec3 perfectReflection = reflect(ray.direction, hitPayload.normal); //Get the perfect reflection direction for future calculations on indirect light
+            normal = hitPayload.normal;
+
+            //Translate ray contact with object to avoid imprecisions
+            ray.origin = hitPayload.position + hitPayload.normal * 0.001;
+
+            //Get pixel color based on the material contribuition
+            contribution *= material.albedo;
+            light += material.emissionColor*material.emissionPower*contribution*max(0, dot(normalize(-ray.direction), normal));
+
+            //Direct light calculations
+            //Change ray direction to see if it is a shadow related to player emission light
+            ray.direction = (cameraPosition - ray.origin);
+            float distanceToPlayer = length(ray.direction);
+            ray.direction = normalize(ray.direction); //Normalzie direction to get a precise hitDistance from hitPayload
+            hitPayload = traceRay(ray);
+            light += float(hitPayload.hitDistance < 0 || hitPayload.hitDistance > distanceToPlayer) * playerEmissionColor*playerEmissionPower*contribution*max(0,dot(normalize(ray.direction), normal))/(4*M_PI*distanceToPlayer*distanceToPlayer);
+
+            //Change ray direction to see if it is a shadow related to sun emission light
+            ray.direction = -sunDirection;
+            hitPayload = traceRay(ray);
+            light += float(hitPayload.hitDistance < 0) * sunEmissionColor*sunEmissionPower*contribution*max(0,dot(normalize(ray.direction), normal));
+
+            //Indirect light continue
+            //Change the ray direction to a random direction following the surface diffuse properties
+            ray.direction = normalize(randHemisphere(seed, normal) + perfectReflection*(1/(material.roughness+EPSILON)-1));
+
         }
 
-        material = materials[hitPayload.materialIndex];
-        vec3 perfectReflection = reflect(ray.direction, hitPayload.normal); //Get the perfect reflection direction for future calculations on indirect light
-        normal = hitPayload.normal;
-
-        //Translate ray contact with object to avoid imprecisions
-        ray.origin = hitPayload.position + hitPayload.normal * 0.001;
-
-        //Get pixel color based on the material contribuition
-        contribution *= material.albedo;
-        light += material.emissionColor*material.emissionPower*contribution*max(0, dot(normalize(-ray.direction), normal));
-
-        //Direct light calculations
-        //Change ray direction to see if it is a shadow related to player emission light
-        ray.direction = (cameraPosition - ray.origin);
-        float distanceToPlayer = length(ray.direction);
-        ray.direction = normalize(ray.direction); //Normalzie direction to get a precise hitDistance from hitPayload
-        hitPayload = traceRay(ray);
-        light += float(hitPayload.hitDistance < 0 || hitPayload.hitDistance > distanceToPlayer) * playerEmissionColor*playerEmissionPower*contribution*max(0,dot(normalize(ray.direction), normal))/(4*M_PI*distanceToPlayer*distanceToPlayer);
-
-        //Change ray direction to see if it is a shadow related to sun emission light
-        ray.direction = -sunDirection;
-        hitPayload = traceRay(ray);
-        light += float(hitPayload.hitDistance < 0) * sunEmissionColor*sunEmissionPower*contribution*max(0,dot(normalize(ray.direction), normal));
-
-        //Indirect light continue
-        //Change the ray direction to a random direction following the surface diffuse properties
-        ray.direction = normalize(randHemisphere(seed, normal) + perfectReflection*(1/(material.roughness+EPSILON)-1));
-        //contribution *= max(0,dot(normalize(ray.direction), normal));
-
+        accumulatedLight += clamp(light, 0, 1);
     }
 
 
-    imageStore(colorbuffer, pixelPos, vec4(light, 1.0));
+    imageStore(colorbuffer, pixelPos, vec4(accumulatedLight/float(numberOfAccumulationsPerRaytrace), 1.0));
 }
