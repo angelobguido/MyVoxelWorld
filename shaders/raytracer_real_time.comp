@@ -344,9 +344,10 @@ float sdfSolidAngle(vec3 position, float angle, float ra){
 }
 
 float map(vec3 position){
-    float solidAngle = sdfSolidAngle(position - objectPosition, M_PI/3, 10);
+    //float object = sdfSolidAngle(position - objectPosition, M_PI/3, 10);
+    float object = sdfSphere(position - objectPosition, 10);
 
-    return solidAngle;
+    return object;
 }
 
 vec3 calculateNormal(vec3 position){
@@ -393,34 +394,126 @@ HitPayload traceRayOffGrid(Ray ray){
 HitPayload traceRay(Ray ray){
 
     HitPayload hitVoxelGrid = traceRayVoxelGrid(ray);
-    HitPayload hitOffGrid = traceRayOffGrid(ray);
-
-    //Test if both rays hit nothing
-    if(hitVoxelGrid.hitDistance<0 && hitOffGrid.hitDistance<0){
-        return hitVoxelGrid; //Return any of the hits
-    }
-
-    //Test if it hit first at the voxel grid
-    if(hitVoxelGrid.hitDistance < hitOffGrid.hitDistance){
-        if(hitVoxelGrid.hitDistance>0)
-            return hitVoxelGrid;
-        else
-            return hitOffGrid;
-    }
-
-    //Test if it hit first at the off grid
-    if(hitVoxelGrid.hitDistance > hitOffGrid.hitDistance && hitOffGrid.hitDistance>0){
-        if(hitOffGrid.hitDistance>0)
-            return hitOffGrid;
-        else
-            return hitVoxelGrid;
-    }
+//    HitPayload hitOffGrid = traceRayOffGrid(ray);
+//
+//    //Test if both rays hit nothing
+//    if(hitVoxelGrid.hitDistance<0 && hitOffGrid.hitDistance<0){
+//        return hitVoxelGrid; //Return any of the hits
+//    }
+//
+//    //Test if it hit first at the voxel grid
+//    if(hitVoxelGrid.hitDistance < hitOffGrid.hitDistance){
+//        if(hitVoxelGrid.hitDistance>0)
+//            return hitVoxelGrid;
+//        else
+//            return hitOffGrid;
+//    }
+//
+//    //Test if it hit first at the off grid
+//    if(hitVoxelGrid.hitDistance > hitOffGrid.hitDistance && hitOffGrid.hitDistance>0){
+//        if(hitOffGrid.hitDistance>0)
+//            return hitOffGrid;
+//        else
+//            return hitVoxelGrid;
+//    }
 
 
 
     return hitVoxelGrid;
 
 }
+
+vec3 getDirectionLight(vec3 lightDirection, vec3 emission, vec3 normal, vec3 viewDirection, Material material){
+
+    lightDirection = normalize(lightDirection);
+    vec3 reflectDirection = reflect(lightDirection, normal);
+
+    float diff = max(dot(normal, -lightDirection), 0);
+    float spec = pow(max(dot(viewDirection, reflectDirection), 0), 32);
+
+    vec3 diffuse = emission * diff;
+    vec3 specular = emission * spec;
+
+    return (diffuse+specular)*material.albedo;
+}
+
+vec3 getPointLight(vec3 lightPosition, vec3 emission, float constantAttenuation, float linearAttenuation, float quadraticAttenuation, vec3 surfacePosition, vec3 normal, vec3 viewDirection, Material material){
+
+    vec3 lightDirection = normalize(surfacePosition - lightPosition);
+    vec3 reflectDirection = reflect(lightDirection, normal);
+
+    float diff = max(dot(normal, -lightDirection), 0);
+    float spec = pow(max(dot(viewDirection, reflectDirection), 0), 32);
+
+    float dist = length(surfacePosition - lightPosition);
+    float attenuation = 1.0 / (constantAttenuation + linearAttenuation * dist + quadraticAttenuation * dist * dist);
+
+    vec3 diffuse = emission * diff * attenuation;
+    vec3 specular = emission * spec * attenuation;
+
+    return (diffuse+specular)*material.albedo;
+
+}
+
+bool isPointVisible(vec3 surfacePosition, vec3 pointPosition){
+
+    Ray ray;
+    ray.origin = surfacePosition;
+    ray.direction = pointPosition - surfacePosition;
+
+    float dist = length(ray.direction);
+    ray.direction = normalize(ray.direction); //Normalzie direction to get a precise hitDistance from hitPayload
+    HitPayload hitPayload = traceRay(ray);
+
+    return (hitPayload.hitDistance < 0 || hitPayload.hitDistance > dist);
+
+}
+
+bool isSkyVisible(vec3 surfacePosition, vec3 direction){
+
+    Ray ray;
+    ray.origin = surfacePosition;
+    ray.direction = direction;
+
+    HitPayload hitPayload = traceRay(ray);
+
+    return (hitPayload.hitDistance < 0);
+
+}
+
+vec3 calculateDirectLight(vec3 surfacePosition, vec3 normal, Material material){
+    vec3 viewDir = normalize(cameraPosition - surfacePosition);
+    vec3 light = vec3(0);
+    vec3 preLight; // Used to test if the light is strong enough to worth sending rays
+    float threshold = EPSILON;
+
+    // Sun light
+    preLight = getDirectionLight(sunDirection, sunEmissionColor*sunEmissionPower, normal, viewDir, material);
+    if (length(preLight) > threshold){
+        if(isSkyVisible(surfacePosition, -sunDirection)){
+            light += preLight;
+        }
+    }
+
+    // Player light
+    preLight = getPointLight(cameraPosition, playerEmissionColor*playerEmissionPower, 0, 0, 4*M_PI, surfacePosition, normal, viewDir, material);
+    if (length(preLight) > threshold){
+        if(isPointVisible(surfacePosition, cameraPosition)){
+            light += preLight;
+        }
+    }
+
+    // Object light
+    preLight = getPointLight(objectPosition, vec3(1,1,1)*5, 0, 5, 0, surfacePosition, normal, viewDir, material);
+    if (length(preLight) > threshold){
+        if(isPointVisible(surfacePosition, objectPosition)){
+            light += preLight;
+        }
+    }
+
+    return light;
+}
+
 
 void main() {
 
@@ -446,43 +539,44 @@ void main() {
     Material material;
 
     vec3 light = vec3(0);
-    vec3 contribution = vec3(1);
+    vec3 ambientLight = vec3(1,1,1);
+    float ambientePower = 0.1;
     vec3 normal;
+    vec3 contribuition = vec3(1);
 
-    hitPayload = traceRay(ray);
+    for(int i = 0; i < 3; i++){
 
-    if (hitPayload.hitDistance < 0)
-        light = backgroundColor;
-    else{
+        hitPayload = traceRay(ray);
+
+        if (hitPayload.hitDistance < 0){
+            light += backgroundColor*contribuition;
+            break;
+        }
+
+        // Get surface properties
+        vec3 surfacePosition = hitPayload.position + hitPayload.normal * 0.001; // Translate intersection to avoid problems
         material = materials[hitPayload.materialIndex];
-        contribution = material.albedo;
-
         normal = hitPayload.normal;
 
-        //Translate ray contact with object to avoid imprecisions
-        ray.origin = hitPayload.position + hitPayload.normal * 0.001;
+        // Direct light calculations:
+        light += calculateDirectLight(surfacePosition, normal, material);
 
-        //Get pixel color based on the material contribuition
-//        light = material.emissionColor*material.emissionPower*max(0, dot(normalize(-ray.direction), normal));
+        // Ambient light:
+        light += ambientLight*ambientePower;
 
-        //Direct light calculations
-        //Change ray direction to see if it is a shadow related to player emission light
-        ray.direction = (cameraPosition - ray.origin);
-        float distanceToPlayer = length(ray.direction);
-        ray.direction = normalize(ray.direction); //Normalzie direction to get a precise hitDistance from hitPayload
-        hitPayload = traceRay(ray);
-        light += float(hitPayload.hitDistance < 0 || hitPayload.hitDistance > distanceToPlayer) * playerEmissionColor*playerEmissionPower*contribution*max(0,dot(normalize(ray.direction), normal))/(4*M_PI*distanceToPlayer*distanceToPlayer);
+        // Reflections
+        light *= contribuition;
+        contribuition *= material.albedo;
 
-        //Change ray direction to see if it is a shadow related to sun emission light
-        ray.direction = -sunDirection;
-        hitPayload = traceRay(ray);
-        light += float(hitPayload.hitDistance < 0) * sunEmissionColor*sunEmissionPower*contribution*max(0,dot(normalize(ray.direction), normal));
+        if(material.roughness>0.1){
+            break;
+        }
 
-        //Indirect light continue
-        //Change the ray direction to a random direction following the surface diffuse properties
-//        ray.direction = normalize(randHemisphere(seed, normal) + perfectReflection*(1/(material.roughness+EPSILON)-1));
+        ray.origin = surfacePosition;
+        ray.direction = reflect(ray.direction, normal);
 
     }
+
 
     imageStore(colorbuffer, pixelPos, vec4(light, 1.0));
 }
