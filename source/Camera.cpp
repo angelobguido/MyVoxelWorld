@@ -133,10 +133,27 @@ void Camera::update(float deltaTime, Detector &detector) {
             if(actionTimer < 0){
                 // Reset timer
                 actionTimer = actionCooldownTime;
-                detector.detectBlockAndPlace(position, front, 4);
+                detector.detectBlockAndPlace(position, front, selectedBlock);
                 detector.detectMovement();
             }
         }
+
+        if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS){
+            selectedBlock = 1;
+        }
+
+        if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS){
+            selectedBlock = 2;
+        }
+
+        if(glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS){
+            selectedBlock = 3;
+        }
+
+        if(glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS){
+            selectedBlock = 4;
+        }
+
     }
 
 

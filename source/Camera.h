@@ -52,6 +52,8 @@ private:
 
     float actionTimer = 0;
 
+    int selectedBlock = 4;
+
     glm::vec3 objectPosition = glm::vec3(50,50,70);
 
     glm::mat4 inverseProjectionMatrix;
