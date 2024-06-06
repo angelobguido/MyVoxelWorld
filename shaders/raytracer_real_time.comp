@@ -449,30 +449,21 @@ void main() {
     vec3 contribution = vec3(1);
     vec3 normal;
 
-    for (int j = 0; j < bounces; j++){
-        seed += j;
-        //Russian Roulette stop the ray by chance if the contribution is too low
-        float r = randFloat(seed);
-        if(r > length(contribution)/length(vec3(1)))
-            break;
+    hitPayload = traceRay(ray);
 
-        hitPayload = traceRay(ray);
-
-        if (hitPayload.hitDistance < 0) {
-            light += backgroundColor * contribution;
-            break;
-        }
-
+    if (hitPayload.hitDistance < 0)
+        light = backgroundColor;
+    else{
         material = materials[hitPayload.materialIndex];
-        vec3 perfectReflection = reflect(ray.direction, hitPayload.normal); //Get the perfect reflection direction for future calculations on indirect light
+        contribution = material.albedo;
+
         normal = hitPayload.normal;
 
         //Translate ray contact with object to avoid imprecisions
         ray.origin = hitPayload.position + hitPayload.normal * 0.001;
 
         //Get pixel color based on the material contribuition
-        contribution *= material.albedo;
-        light += material.emissionColor*material.emissionPower*contribution*max(0, dot(normalize(-ray.direction), normal));
+//        light = material.emissionColor*material.emissionPower*max(0, dot(normalize(-ray.direction), normal));
 
         //Direct light calculations
         //Change ray direction to see if it is a shadow related to player emission light
@@ -489,10 +480,9 @@ void main() {
 
         //Indirect light continue
         //Change the ray direction to a random direction following the surface diffuse properties
-        ray.direction = normalize(randHemisphere(seed, normal) + perfectReflection*(1/(material.roughness+EPSILON)-1));
+//        ray.direction = normalize(randHemisphere(seed, normal) + perfectReflection*(1/(material.roughness+EPSILON)-1));
 
     }
-
 
     imageStore(colorbuffer, pixelPos, vec4(light, 1.0));
 }
