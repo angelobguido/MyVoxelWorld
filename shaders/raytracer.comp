@@ -70,7 +70,7 @@ const Material[] materials = {
     Material(vec3(0,0,0), 0, 0, vec3(1), 0),
     Material(vec3(0.7,0.4,0), 0.99, 0, vec3(1,0,0), 0),
     Material(vec3(0,0.7,0.1), 0.7, 0, vec3(0,1,0), 0),
-    Material(vec3(1,1,1), 0, 0, vec3(1,1,1), 5),
+    Material(vec3(1,1,1), 0, 0, vec3(1,1,1), 2),
     Material(vec3(0.7,0.7,0.9), 0, 0, vec3(1,1,1), 0)
 };
 
@@ -395,6 +395,7 @@ HitPayload traceRay(Ray ray){
     HitPayload hitVoxelGrid = traceRayVoxelGrid(ray);
     HitPayload hitOffGrid = traceRayOffGrid(ray);
 
+
     //Test if both rays hit nothing
     if(hitVoxelGrid.hitDistance<0 && hitOffGrid.hitDistance<0){
         return hitVoxelGrid; //Return any of the hits
@@ -490,6 +491,7 @@ void main() {
         //Indirect light continue
         //Change the ray direction to a random direction following the surface diffuse properties
         ray.direction = normalize(randHemisphere(seed, normal) + perfectReflection*(1/(material.roughness+EPSILON)-1));
+        //contribution *= max(0,dot(normalize(ray.direction), normal));
 
     }
 

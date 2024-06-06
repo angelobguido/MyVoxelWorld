@@ -10,6 +10,7 @@ App::App(int gridSizeX, int gridSizeY, int gridSizeZ):gridSizeX(gridSizeX),gridS
 App::~App() {
     delete raytracerShader;
     delete screenShader;
+    delete accumulatorShader;
 
     glDeleteTextures(1, &colorBuffer);
 
@@ -68,7 +69,7 @@ void App::setUpOpenGl() {
     // Create the shaders, the screen shader is used to draw the screen texture and the raytracer shader is used to create the screen texture with the ray tracing techniques.
     screenShader = new ShaderProgram({{"./shaders/fragment.frag", GL_FRAGMENT_SHADER}, {"./shaders/vertex.vert", GL_VERTEX_SHADER}});
     raytracerShader = new ShaderProgram({{"./shaders/raytracer.comp", GL_COMPUTE_SHADER}});
-
+    accumulatorShader = new ShaderProgram({{"./shaders/accumulator.comp", GL_COMPUTE_SHADER}});
 
     // Generate and bind framebuffers
     glGenFramebuffers(1, &sceneFramebuffer);
@@ -142,7 +143,7 @@ void App::setUpGlfw() {
 }
 
 void App::createRenderer() {
-    renderer = new Renderer(screenShader, raytracerShader, window, &colorBuffer, &sceneFramebuffer, &accumulationColorBuffer, &accumulationFrameBuffer);
+    renderer = new Renderer(screenShader, raytracerShader, accumulatorShader, window, &colorBuffer, &sceneFramebuffer, &accumulationColorBuffer, &accumulationFrameBuffer);
 }
 
 void App::createCamera() {
@@ -154,10 +155,16 @@ void App::setUpCallbacks() {
 }
 
 void App::framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+
+    float quality = currentApp->quality;
     glViewport(0,0,width,height);
+    width = int(width*quality);
+    height = int(height*quality);
+
     currentApp->recreateColorBuffer(width,height);
     currentApp->camera->recalculateProjection(width, height);
     currentApp->renderer->recalculateWorkGroups(width, height);
+    currentApp->renderer->resizeAccumulationBuffer(width, height);
 
 }
 

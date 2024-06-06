@@ -22,7 +22,7 @@ public:
     void setIVec3(const std::string& name, const glm::ivec3& vec);
     void setMat4(const std::string& name, const glm::mat4& mat);
     void setInt(const std::string& name, int value);
-
+    
 private:
 
     uint attachShader(const std::string & path, uint type) const;

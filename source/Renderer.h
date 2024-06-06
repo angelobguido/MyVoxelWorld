@@ -13,19 +13,22 @@ class Renderer {
     const int maxAccumulationFrames = 1000;
 
 public:
-    Renderer(ShaderProgram *screenShader, ShaderProgram *raytracerShader, GLFWwindow *window, unsigned int *colorBuffer,
+    Renderer(ShaderProgram *screenShader, ShaderProgram *raytracerShader, ShaderProgram *accumulatorShader, GLFWwindow *window, unsigned int *colorBuffer,
              unsigned int *sceneFrameBuffer, unsigned int *accumulationColorBuffer, unsigned int *accumulationFrameBuffer);
     void update(Detector &detector);
     void recalculateWorkGroups(int width, int height);
+    void resizeAccumulationBuffer(int width, int height);
 
 private:
     ShaderProgram* screenShader;
     ShaderProgram* raytracerShader;
+    ShaderProgram* accumulatorShader;
 
     unsigned int * colorBuffer;
     unsigned int *sceneFrameBuffer;
     unsigned int *accumulationBuffer;
     unsigned int *accumulationFrameBuffer;
+    unsigned int accumulationBufferProgressive;
 
     std::random_device rd;
     std::mt19937 gen;

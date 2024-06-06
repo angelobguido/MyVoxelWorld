@@ -124,6 +124,7 @@ void Camera::update(float deltaTime, Detector &detector) {
                 // Reset timer
                 actionTimer = actionCooldownTime;
                 detector.detectBlockAndBreak(position, front);
+                detector.detectMovement();
             }
         }
 
@@ -133,6 +134,7 @@ void Camera::update(float deltaTime, Detector &detector) {
                 // Reset timer
                 actionTimer = actionCooldownTime;
                 detector.detectBlockAndPlace(position, front, 4);
+                detector.detectMovement();
             }
         }
     }

@@ -11,10 +11,10 @@
 class Camera {
 
     const float speed = 10;
-    const float sensitivity = 0.1;
+    const float sensitivity = 0.2;
     const float near = 0.01;
     const float far = 1000;
-    const float actionCooldownTime = 0.5;
+    const float actionCooldownTime = 0.1;
 
     const int WIDTH = 800;
     const int HEIGHT = 600;

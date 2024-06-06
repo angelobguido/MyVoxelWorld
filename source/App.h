@@ -21,6 +21,7 @@ public:
     void createCamera();
 
     static App* currentApp;
+    float quality = 0.2;
 
 private:
     void setUpGlfw();
@@ -38,6 +39,7 @@ private:
     GLFWwindow* window;
     ShaderProgram* raytracerShader;
     ShaderProgram* screenShader;
+    ShaderProgram* accumulatorShader;
     unsigned int colorBuffer;
     unsigned int accumulationColorBuffer;
     unsigned int sceneFramebuffer;

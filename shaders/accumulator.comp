@@ -1,0 +1,33 @@
+#version 430
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+layout(rgba32f, binding = 0) uniform image2D colorbuffer;
+
+layout(std430, binding = 4) buffer accumulationBuffer{
+    vec4[] accumulation;
+};
+
+uniform int reset;
+uniform int numberOfAccumulations;
+
+void main() {
+
+
+
+    ivec2 pixelPos = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 screen_size = imageSize(colorbuffer);
+    if (pixelPos.x >= screen_size.x || pixelPos.y >= screen_size.y) {
+        return;
+    }
+
+    if(reset == 1){
+        accumulation[pixelPos.x + pixelPos.y*screen_size.x] = vec4(0);
+    }
+
+    accumulation[pixelPos.x + pixelPos.y*screen_size.x] += imageLoad(colorbuffer, pixelPos);
+
+    vec4 accumulatedColor = accumulation[pixelPos.x + pixelPos.y*screen_size.x]/numberOfAccumulations;
+
+    imageStore(colorbuffer, pixelPos, accumulatedColor);
+}

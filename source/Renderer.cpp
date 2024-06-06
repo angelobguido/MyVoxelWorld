@@ -1,15 +1,21 @@
 #include "Renderer.h"
 
-Renderer::Renderer(ShaderProgram *screenShader, ShaderProgram *raytracerShader, GLFWwindow *window,
+Renderer::Renderer(ShaderProgram *screenShader, ShaderProgram *raytracerShader, ShaderProgram *accumulatorShader, GLFWwindow *window,
                    unsigned int *colorBuffer,
                    unsigned int *sceneFrameBuffer, unsigned int *accumulationColorBuffer,
                    unsigned int *accumulationFrameBuffer)
-        : screenShader(screenShader), raytracerShader(raytracerShader), colorBuffer(colorBuffer), sceneFrameBuffer(sceneFrameBuffer), accumulationBuffer(accumulationColorBuffer), accumulationFrameBuffer(accumulationFrameBuffer) {
+        : screenShader(screenShader), raytracerShader(raytracerShader), accumulatorShader(accumulatorShader), colorBuffer(colorBuffer), sceneFrameBuffer(sceneFrameBuffer), accumulationBuffer(accumulationColorBuffer), accumulationFrameBuffer(accumulationFrameBuffer) {
 
     int w,h;
     glfwGetFramebufferSize(window, &w, &h);
     workgroup_count_x = (w + 7) / 8;
     workgroup_count_y = (h + 7) / 8;
+
+    glGenBuffers(1, &accumulationBufferProgressive);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, accumulationBufferProgressive);
+    std::vector<float> data(w*h*4, 0); // Initialize accumulation buffer with zero
+    glBufferData(GL_SHADER_STORAGE_BUFFER, w*h*sizeof(float)*4, data.data(), GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, accumulationBufferProgressive);
 
     gen = std::mt19937 (rd());
     dist = std::uniform_int_distribution<int>();
@@ -19,31 +25,29 @@ Renderer::Renderer(ShaderProgram *screenShader, ShaderProgram *raytracerShader, 
 
 void Renderer::update(Detector &detector) {
 
-    // Reset accumulation frame buffer if something has moved
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    int reset = 0;
+
     if(detector.getSomethingMoved()){
-        glBindFramebuffer(GL_FRAMEBUFFER, *accumulationFrameBuffer);
-        glClear(GL_COLOR_BUFFER_BIT);
-        accumulationCounter = 0;
+        accumulationCounter = 1;
+        reset = 1;
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, *sceneFrameBuffer);
-    glClear(GL_COLOR_BUFFER_BIT);
+
+    glBindImageTexture(0, *colorBuffer, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
     raytracerShader->use();
     raytracerShader->setInt("rendererRandom", dist(gen));
-    glBindImageTexture(0, *colorBuffer, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
     glDispatchCompute(workgroup_count_x,workgroup_count_y,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, *accumulationFrameBuffer);
-    glEnable(GL_BLEND);
+    accumulatorShader->use();
+    accumulatorShader->setInt("reset", reset);
+    accumulatorShader->setInt("numberOfAccumulations", accumulationCounter);
+    glDispatchCompute(workgroup_count_x,workgroup_count_y,1);
+    glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-    if (detector.getSomethingMoved()) {
-        // Direct copy if something has moved recently
-        glBlendFunc(GL_ONE, GL_ZERO);
-    } else {
-        glBlendColor(1,1,1,1/float(accumulationCounter));
-        glBlendFunc(GL_CONSTANT_ALPHA, GL_ONE_MINUS_CONSTANT_ALPHA);
-    }
 
     screenShader->use();
     glBindTexture(GL_TEXTURE_2D, *colorBuffer);
@@ -51,21 +55,21 @@ void Renderer::update(Detector &detector) {
 
     glDisable(GL_BLEND);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    screenShader->use();
-    glBindTexture(GL_TEXTURE_2D, *accumulationBuffer);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glfwSwapBuffers(window);
 
     accumulationCounter++;
-
-    glfwSwapBuffers(window);
 
 }
 
 void Renderer::recalculateWorkGroups(int width, int height) {
     workgroup_count_x = (width + 7) / 8;
     workgroup_count_y = (height + 7) / 8;
+}
+
+void Renderer::resizeAccumulationBuffer(int width, int height) {
+    glGenBuffers(1, &accumulationBufferProgressive);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, accumulationBufferProgressive);
+    std::vector<float> data(width*height*4, 0); // Initialize accumulation buffer with zero
+    glBufferData(GL_SHADER_STORAGE_BUFFER, width*height*sizeof(float)*4, data.data(), GL_DYNAMIC_DRAW);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 4, accumulationBufferProgressive);
 }
