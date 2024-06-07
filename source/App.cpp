@@ -2,7 +2,7 @@
 
 App* App::currentApp = nullptr;
 
-App::App(int gridSizeX, int gridSizeY, int gridSizeZ):gridSizeX(gridSizeX),gridSizeY(gridSizeY),gridSizeZ(gridSizeZ) {
+App::App() {
     setUpGlfw();
     currentApp = this;
 }
@@ -46,10 +46,10 @@ void App::run() {
         }
 
         renderer->update(detector);
-        detector.resetMoveDetection();
-        for(int i = 0; i < 1; i++) {
-            renderer->update(detector);
-        }
+//        detector.resetMoveDetection();
+//        for(int i = 0; i < 1; i++) {
+//            renderer->update(detector);
+//        }
     }
 }
 
@@ -71,7 +71,7 @@ void App::setUpOpenGl() {
 
     // Create the shaders, the screen shader is used to draw the screen texture and the raytracer shader is used to create the screen texture with the ray tracing techniques.
     screenShader = new ShaderProgram({{"./shaders/fragment.frag", GL_FRAGMENT_SHADER}, {"./shaders/vertex.vert", GL_VERTEX_SHADER}});
-    raytracerShader = new ShaderProgram({{"./shaders/raytracer_real_time.comp", GL_COMPUTE_SHADER}});
+    raytracerShader = new ShaderProgram({{"./shaders/raytracer.comp", GL_COMPUTE_SHADER}});
     accumulatorShader = new ShaderProgram({{"./shaders/accumulator.comp", GL_COMPUTE_SHADER}});
 
     // Generate and bind framebuffers
@@ -212,7 +212,6 @@ void App::recreateColorBuffer(int width, int height) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void App::setUpBuilder() {
+void App::setUpBuilder(int gridSizeX, int gridSizeY, int gridSizeZ) {
     builder = new VoxelWorldBuilder(raytracerShader, gridSizeX, gridSizeY, gridSizeZ, 8);
 }
-

@@ -17,6 +17,20 @@ void VoxelWorldBuilder::build() {
     const siv::PerlinNoise::seed_type seed = 123456u;
     const siv::PerlinNoise perlin{seed};
 
+//
+//    for(int x = 0; x < gridSize.x; x++){
+//        for(int y = 0; y < gridSize.y; y++){
+//            for(int z = 0; z < gridSize.z; z++){
+//
+//                if(y < 10){
+//                    voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = 2;
+//
+//                }
+//
+//            }
+//        }
+//    }
+
 
     for (int x = 0; x < gridSize.x; x++) {
         for (int y = 0; y < gridSize.y; y++) {
@@ -96,16 +110,6 @@ void VoxelWorldBuilder::build() {
             }
         }
     }
-
-//    for(int x = 0; x < gridSize.x; x++){
-//        for(int y = 0; y < gridSize.y; y++){
-//            for(int z = 0; z < gridSize.z; z++){
-//
-//                voxelGrid[x + z*gridSize.x + y*gridSize.x*gridSize.z] = dist(gen);
-//
-//            }
-//        }
-//    }
 
     std::cout << "Grid created" << std::endl;
 

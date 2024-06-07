@@ -16,6 +16,8 @@ add_executable(MyVoxelWorld
         source/PerlinNoise/PerlinNoise.hpp
         source/Detector.cpp
         source/Detector.h
+        source/Saver.cpp
+        source/Saver.h
 )
 
 target_link_libraries(MyVoxelWorld -lglfw -lGL -lGLEW -lm)

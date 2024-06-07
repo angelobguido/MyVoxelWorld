@@ -9,14 +9,13 @@
 #include "VoxelWorldBuilder.h"
 #include "Detector.h"
 
-
 class App {
 public:
-    App(int gridSizeX, int gridSizeY, int gridSizeZ);
+    App();
     ~App();
     void run();
     void setUpOpenGl();
-    void setUpBuilder();
+    void setUpBuilder(int gridSizeX, int gridSizeY, int gridSizeZ);
     void createRenderer();
     void createCamera();
 
@@ -50,7 +49,6 @@ private:
     float frameTime;
     float delta;
 
-    int gridSizeX, gridSizeY, gridSizeZ;
 
 };
 

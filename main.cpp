@@ -3,12 +3,12 @@
 int main(){
 
     //Create an app with a world size of the desired values.
-    App app(100,100,100);
+    App app;
 
     app.setUpOpenGl();
     app.createRenderer();
     app.createCamera();
-    app.setUpBuilder();
+    app.setUpBuilder(100,100,100);
 
     app.run();
 

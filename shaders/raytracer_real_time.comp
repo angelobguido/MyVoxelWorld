@@ -431,7 +431,7 @@ vec3 getDirectionLight(vec3 lightDirection, vec3 emission, vec3 normal, vec3 vie
     float diff = max(dot(normal, -lightDirection), 0);
     float spec = pow(max(dot(viewDirection, reflectDirection), 0), 32);
 
-    vec3 diffuse = emission * diff;
+    vec3 diffuse = emission * diff * (1-material.metallic);
     vec3 specular = emission * spec;
 
     return (diffuse+specular)*material.albedo;
@@ -448,7 +448,7 @@ vec3 getPointLight(vec3 lightPosition, vec3 emission, float constantAttenuation,
     float dist = length(surfacePosition - lightPosition);
     float attenuation = 1.0 / (constantAttenuation + linearAttenuation * dist + quadraticAttenuation * dist * dist);
 
-    vec3 diffuse = emission * diff * attenuation;
+    vec3 diffuse = emission * diff * attenuation * (1-material.metallic);
     vec3 specular = emission * spec * attenuation;
 
     return (diffuse+specular)*material.albedo;
