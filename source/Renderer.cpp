@@ -1,10 +1,8 @@
 #include "Renderer.h"
 
 Renderer::Renderer(ShaderProgram *screenShader, ShaderProgram *raytracerShader, ShaderProgram *accumulatorShader, GLFWwindow *window,
-                   unsigned int *colorBuffer,
-                   unsigned int *sceneFrameBuffer, unsigned int *accumulationColorBuffer,
-                   unsigned int *accumulationFrameBuffer)
-        : screenShader(screenShader), raytracerShader(raytracerShader), accumulatorShader(accumulatorShader), colorBuffer(colorBuffer), sceneFrameBuffer(sceneFrameBuffer), accumulationBuffer(accumulationColorBuffer), accumulationFrameBuffer(accumulationFrameBuffer) {
+                   unsigned int *colorBuffer)
+        : screenShader(screenShader), raytracerShader(raytracerShader), accumulatorShader(accumulatorShader), colorBuffer(colorBuffer) {
 
     int w,h;
     glfwGetFramebufferSize(window, &w, &h);
@@ -29,32 +27,36 @@ void Renderer::update(Detector &detector) {
 
     int reset = 0;
 
+    //If something moved, reset accumulation counter
     if(detector.getSomethingMoved()){
         accumulationCounter = 1;
         reset = 1;
     }
 
-
+    //Bind the color buffer texture to draw with raytracer shader
     glBindImageTexture(0, *colorBuffer, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
+    //Set up raytracer
     raytracerShader->use();
     raytracerShader->setInt("rendererRandom", dist(gen));
     glDispatchCompute(workgroup_count_x,workgroup_count_y,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
+    //Set up accumulator, it is used to draw in the color buffer an average of all previous rendered frames to reduce noise
     accumulatorShader->use();
     accumulatorShader->setInt("reset", reset);
     accumulatorShader->setInt("numberOfAccumulations", accumulationCounter);
     glDispatchCompute(workgroup_count_x,workgroup_count_y,1);
     glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
 
-
+    //Draw the created texture in the screen using the normal pipeline(the only mesh that I have is the two triangles forming the rectangle screen)
     screenShader->use();
     glBindTexture(GL_TEXTURE_2D, *colorBuffer);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glfwSwapBuffers(window);
 
+    //Increment accumulation counter to enhance noise reduction
     accumulationCounter++;
 
 }

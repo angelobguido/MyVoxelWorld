@@ -129,3 +129,19 @@ void Detector::detectBlockAndPlace(glm::vec3 origin, glm::vec3 direction, int bl
     }
 }
 
+bool Detector::detectCollision(glm::vec3 position) {
+
+    glm::ivec3 gridSize = builder->gridSize;
+    glm::ivec3 voxelPosition = glm::floor(position);
+
+    // Check if the current voxel is out of the grid bounds
+    if (voxelPosition.x < 0 || voxelPosition.x >= gridSize.x ||
+        voxelPosition.y < 0 || voxelPosition.y >= gridSize.y ||
+        voxelPosition.z < 0 || voxelPosition.z >= gridSize.z) {
+        return true;
+    }
+
+    // Check if current voxel is a block
+    return (builder->voxelGrid[voxelPosition.x + voxelPosition.z * gridSize.x + voxelPosition.y * gridSize.x * gridSize.z] != 0);
+}
+

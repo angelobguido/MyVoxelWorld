@@ -1,16 +1,18 @@
+// Trabalho feito por Ângelo Antônio Bertoli Guido - 12547677
+
 #include "./source/App.h"
 
 int main(){
 
-    //Create an app with a world size of the desired values.
+    //Create an app.
     App app;
 
     app.setUpOpenGl();
     app.createRenderer();
     app.createCamera();
-    app.setUpBuilder(100,100,100);
+    app.setUpBuilder(100,100,100); //Set world size
 
-    app.run();
+    app.run(); //Enter app loop
 
     return 0;
 }

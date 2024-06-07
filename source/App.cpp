@@ -22,13 +22,18 @@ App::~App() {
 
 void App::run() {
 
+    //Show glfw window
     glfwShowWindow(window);
 
+    //Set up callbacks for screen change in width and height
     setUpCallbacks();
+    //Generate a limited world using Perlin Noise, and add some structures
     builder->build();
 
+    //Create detector object that will detect collisions, movements and events
     Detector detector(builder);
 
+    //Initialize frame handler
     lastTime = glfwGetTime();
     lastTimeForFrame = lastTime;
     numFrames = 0;
@@ -37,19 +42,15 @@ void App::run() {
     while (!glfwWindowShouldClose(window)) {
 
         glfwPollEvents();
-        detector.resetMoveDetection();
+        detector.resetMoveDetection(); //Reset move detection to restart path tracer accumulator
 
         handleFrameTiming();
-        camera->update(delta, detector);
-        if (detector.getShouldClose()) {
+        camera->update(delta, detector); //Update camera using some key and mouse callbacks
+        if (detector.getShouldClose()) { //Close if detector detect the close command when updating cameras
             break;
         }
 
-        renderer->update(detector);
-//        detector.resetMoveDetection();
-//        for(int i = 0; i < 1; i++) {
-//            renderer->update(detector);
-//        }
+        renderer->update(detector); //Use raytracer shader to draw a texture, then the vertex and fragment shader to draw screen the screen using that texture
     }
 }
 
@@ -146,7 +147,7 @@ void App::setUpGlfw() {
 }
 
 void App::createRenderer() {
-    renderer = new Renderer(screenShader, raytracerShader, accumulatorShader, window, &colorBuffer, &sceneFramebuffer, &accumulationColorBuffer, &accumulationFrameBuffer);
+    renderer = new Renderer(screenShader, raytracerShader, accumulatorShader, window, &colorBuffer);
 }
 
 void App::createCamera() {
@@ -173,43 +174,17 @@ void App::framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 
 void App::recreateColorBuffer(int width, int height) {
 
+    // Delete old texture
     glDeleteTextures(1, &colorBuffer);
-    glDeleteTextures(1, &accumulationColorBuffer);
 
     // Generate textures
     glGenTextures(1, &colorBuffer);
-    glGenTextures(1, &accumulationColorBuffer);
 
     // Setup scene draw texture
     glBindTexture(GL_TEXTURE_2D, colorBuffer);
     glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, width, height);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Attach scene draw texture to framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, sceneFramebuffer);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorBuffer, 0);
-
-    auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "Framebuffer error: "<<status<<std::endl;
-
-    // Setup accumulation texture
-    glBindTexture(GL_TEXTURE_2D, accumulationColorBuffer);
-    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA32F, width, height);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Attach accumulation texture to framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, accumulationFrameBuffer);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, accumulationColorBuffer, 0);
-
-    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE)
-        std::cout << "Framebuffer error: "<<status<<std::endl;
-
-    // Unbind framebuffer
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void App::setUpBuilder(int gridSizeX, int gridSizeY, int gridSizeZ) {

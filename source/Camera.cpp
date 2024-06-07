@@ -39,17 +39,32 @@ void Camera::update(float deltaTime, Detector &detector) {
             dUp -= 1.0f; // Down
         }
 
-        // Update camera position if the total movement is big enough
+        // Update camera position if the total movement is big enough, and it is not colliding or exiting the world
+        glm::vec3 lastPosition = position;
         if (glm::length(dPos) > 0.1f) {
             dPos = glm::normalize(dPos);
+
             position += deltaTime * dPos.x * front * speed;
+            if(detector.detectCollision(position)){
+                position = lastPosition;
+            }
+            lastPosition = position;
+
             position += deltaTime * dPos.y * right * speed;
+            if(detector.detectCollision(position)){
+                position = lastPosition;
+            }
+            lastPosition = position;
 
             detector.detectMovement();
         }
 
         if (glm::abs(dUp) > 0.1f) {
             position.y += deltaTime * dUp * speed;
+            if(detector.detectCollision(position)){
+                position = lastPosition;
+            }
+            lastPosition = position;
 
             detector.detectMovement();
         }

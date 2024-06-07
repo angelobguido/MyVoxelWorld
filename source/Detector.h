@@ -25,6 +25,7 @@ public:
     bool getShouldClose() const;
     void detectBlockAndBreak(glm::vec3 origin, glm::vec3 direction);
     void detectBlockAndPlace(glm::vec3 origin, glm::vec3 direction, int blockType);
+    bool detectCollision(glm::vec3 position);
 
 private:
     BlockDetection detectBlock(glm::vec3 origin, glm::vec3 direction);
