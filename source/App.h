@@ -20,7 +20,7 @@ public:
     void createCamera();
 
     static App* currentApp;
-    float quality = 1;
+    float quality = 0.5;
 
 private:
     void setUpGlfw();

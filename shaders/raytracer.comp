@@ -47,11 +47,15 @@ layout(std430, binding = 3) readonly buffer sceneDataVoxels{
 uniform ivec3 gridSize;
 
 uniform vec3 cameraPosition;
-uniform vec3 objectPosition;
+uniform vec3 object1Position;
+uniform vec3 object2Position;
 uniform mat4 inverseProjectionMatrix;
 uniform mat4 inverseViewMatrix;
 uniform int rendererRandom;
-uniform int maxAccumulations;
+uniform int selectedBlock;
+
+uniform float ambientLightPower;
+uniform float roughnessControl;
 
 const int bounces = 50;
 const vec3 backgroundColor = vec3(0.6, 0.7, 0.9);
@@ -64,13 +68,13 @@ const vec3 sunEmissionColor = vec3(1);
 const float sunEmissionPower = 0.5;
 const vec3 sunDirection = normalize(vec3(1,-1,1));
 
-const int objectMaterial = 3;
+const int objectMaterial = 4;
 
-const Material[] materials = {
+Material[] materials = {
     Material(vec3(0,0,0), 0, 0, vec3(1), 0),
     Material(vec3(0.7,0.4,0), 1, 0, vec3(1,0,0), 0),
     Material(vec3(0,0.7,0.1), 0.7, 0, vec3(0,1,0), 0),
-    Material(vec3(0.5,0.5,0.5), 0, 0, vec3(1,1,1), 2),
+    Material(vec3(0.5,0.5,0.5), 0, 0, vec3(1,1,1), 10),
     Material(vec3(0.7,0.7,0.9), 0, 0, vec3(1,1,1), 0)
 };
 
@@ -326,6 +330,7 @@ vec3 randHemisphere(inout uint seed, vec3 normal){
     return v * sign(dot(v, normal));
 }
 
+// https://iquilezles.org/articles/distfunctions/ -> Useful sdfs
 float sdfSphere(vec3 position, float radius){
     return length(position) - radius;
 }
@@ -343,10 +348,23 @@ float sdfSolidAngle(vec3 position, float angle, float ra){
     return max(l,m*sign(c.y*q.x-c.x*q.y));
 }
 
-float map(vec3 position){
-    float solidAngle = sdfSphere(position - objectPosition, 1);
+float sdfOctahedron(vec3 position, float s)
+{
+    position = abs(position);
+    return (position.x+position.y+position.z-s)*0.57735027;
+}
 
-    return solidAngle;
+float opSmoothUnion( float d1, float d2, float k )
+{
+    float h = clamp( 0.5 + 0.5*(d2-d1)/k, 0.0, 1.0 );
+    return mix( d2, d1, h ) - k*h*(1.0-h);
+}
+
+float map(vec3 position){
+    float object1 = sdfSphere(position - object1Position, 1);
+    float object2 = sdfOctahedron(position - object2Position, 2);
+
+    return opSmoothUnion(object1, object2, 2);
 }
 
 vec3 calculateNormal(vec3 position){
@@ -460,7 +478,7 @@ bool isPointVisible(vec3 surfacePosition, vec3 pointPosition){
 
     float dist = length(ray.direction);
     ray.direction = normalize(ray.direction); //Normalzie direction to get a precise hitDistance from hitPayload
-    HitPayload hitPayload = traceRay(ray);
+    HitPayload hitPayload = traceRayVoxelGrid(ray);
 
     return (hitPayload.hitDistance < 0 || hitPayload.hitDistance > dist);
 
@@ -500,13 +518,21 @@ vec3 calculateDirectLight(vec3 surfacePosition, vec3 normal, vec3 contribution){
         }
     }
 
-//    // Object light
-//    preLight = getPointLight(objectPosition, vec3(1,1,1)*10, 0, 5, 0, surfacePosition, normal, viewDir, contribution);
-//    if (length(preLight) > threshold){
-//        if(isPointVisible(surfacePosition, objectPosition)){
-//            light += preLight;
-//        }
-//    }
+    // Object 1 light
+    preLight = getPointLight(object1Position, vec3(1, 1, 1)*2, 0, 5, 0, surfacePosition, normal, viewDir, contribution);
+    if (length(preLight) > threshold){
+        if(isPointVisible(surfacePosition, object1Position)){
+            light += preLight;
+        }
+    }
+
+    // Object 2 light
+    preLight = getPointLight(object2Position, vec3(1, 1, 1)*10, 0, 5, 1, surfacePosition, normal, viewDir, contribution);
+    if (length(preLight) > threshold){
+        if(isPointVisible(surfacePosition, object2Position)){
+            light += preLight;
+        }
+    }
 
     return light;
 }
@@ -536,6 +562,9 @@ void main() {
     vec3 accumulatedLight = vec3(0);
     int numberOfAccumulationsPerRaytrace = 1;
 
+    //Set roughness for selected block material
+    materials[selectedBlock].roughness = roughnessControl;
+
     for(int i = 0; i < numberOfAccumulationsPerRaytrace; i++){
         seed += i;
         vec3 light = vec3(0);
@@ -543,13 +572,13 @@ void main() {
         vec3 normal;
         ray.origin = cameraPosition;
         ray.direction = cameraRayDirection;
-        for (int j = 0; j < bounces; j++){
+        for (int j = 0; j < bounces; j++) {
             seed += j;
             //Russian Roulette stop the ray by chance if the contribution is too low
             float r = randFloat(seed);
-            if(r > length(contribution)/length(vec3(1))*2)
+            if (r > length(contribution) / length(vec3(1)) * 2){
                 break;
-
+            }
             hitPayload = traceRay(ray);
 
             if (hitPayload.hitDistance < 0) {
@@ -573,16 +602,15 @@ void main() {
 
             //Direct light calculations
             light += calculateDirectLight(ray.origin, normal, contribution);
+            light += contribution*ambientLightPower;
 
             //Indirect light continue
             //Change the ray direction to a random direction following the surface diffuse properties
-
-
             ray.direction = normalize(randHemisphere(seed, normal) + perfectReflection*(1/(material.roughness+EPSILON)-1));
-
 
         }
 
+        // Ambient light
         accumulatedLight += clamp(light, 0, 1);
     }
 

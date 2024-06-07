@@ -81,13 +81,24 @@ void Camera::update(float deltaTime, Detector &detector) {
         // Update object position if the total movement is big enough
         if (glm::length(dPos) > 0.1f) {
             dPos = glm::normalize(dPos);
-            objectPosition += deltaTime * dPos * speed;
+
+            switch (selectedObject) {
+                case 1: object1Position += deltaTime * dPos * speed;
+                        break;
+                case 2: object2Position += deltaTime * dPos * speed;
+                        break;
+            }
 
             detector.detectMovement();
         }
 
         if (glm::abs(dUp) > 0.1f) {
-            objectPosition.y += deltaTime * dUp * speed;
+            switch (selectedObject) {
+                case 1: object1Position.y += deltaTime * dUp * speed;
+                    break;
+                case 2: object2Position.y += deltaTime * dUp * speed;
+                    break;
+            }
 
             detector.detectMovement();
         }
@@ -138,20 +149,63 @@ void Camera::update(float deltaTime, Detector &detector) {
             }
         }
 
+        // Choose block
         if(glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS){
             selectedBlock = 1;
+            detector.detectMovement();
         }
 
         if(glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS){
             selectedBlock = 2;
+            detector.detectMovement();
         }
 
         if(glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS){
             selectedBlock = 3;
+            detector.detectMovement();
         }
 
         if(glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS){
             selectedBlock = 4;
+            detector.detectMovement();
+        }
+
+        // Choose object
+        if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS){
+            selectedObject = 1;
+        }
+
+        if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS){
+            selectedObject = 2;
+        }
+
+
+        // Increment and decrement ambient light
+        if(glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS){
+            detector.detectMovement();
+            ambientLightPower += increment * deltaTime;
+        }
+        if(glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS){
+            detector.detectMovement();
+            ambientLightPower -= increment * deltaTime;
+        }
+
+
+        // Change material of selected block type diffuse and specular properties
+        if(glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS){
+            detector.detectMovement();
+            roughnessControl += increment*deltaTime;
+            if(roughnessControl > 1){
+                roughnessControl = 1;
+            }
+        }
+
+        if(glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS){
+            detector.detectMovement();
+            roughnessControl -= increment*deltaTime;
+            if(roughnessControl < 0){
+                roughnessControl = 0;
+            }
         }
 
     }
@@ -200,7 +254,11 @@ void Camera::update(float deltaTime, Detector &detector) {
     raytracerShader->setMat4("inverseViewMatrix", inverseViewMatrix);
     raytracerShader->setMat4("inverseProjectionMatrix", inverseProjectionMatrix);
     raytracerShader->setVec3("cameraPosition", position);
-    raytracerShader->setVec3("objectPosition", objectPosition);
+    raytracerShader->setVec3("object1Position", object1Position);
+    raytracerShader->setVec3("object2Position", object2Position);
+    raytracerShader->setFloat("ambientLightPower", ambientLightPower);
+    raytracerShader->setFloat("roughnessControl", roughnessControl);
+    raytracerShader->setInt("selectedBlock", selectedBlock);
 
 }
 

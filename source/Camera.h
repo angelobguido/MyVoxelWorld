@@ -7,6 +7,7 @@
 #include "ShaderProgram.h"
 #include "Detector.h"
 #include <iostream>
+#include <algorithm>
 
 class Camera {
 
@@ -18,6 +19,8 @@ class Camera {
 
     const int WIDTH = 800;
     const int HEIGHT = 600;
+
+    const float increment = 1;
 
 public:
     Camera(ShaderProgram* raytracerShader, GLFWwindow* window);
@@ -52,9 +55,15 @@ private:
 
     float actionTimer = 0;
 
+    float roughnessControl = 0;
+    float ambientLightPower = 0;
+
     int selectedBlock = 4;
 
-    glm::vec3 objectPosition = glm::vec3(50,50,70);
+    glm::vec3 object1Position = glm::vec3(50, 50, 70);
+    glm::vec3 object2Position = glm::vec3(50, 50, 70);
+
+    int selectedObject = 1;
 
     glm::mat4 inverseProjectionMatrix;
     glm::mat4 inverseViewMatrix;
