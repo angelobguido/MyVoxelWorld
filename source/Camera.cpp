@@ -140,6 +140,16 @@ void Camera::update(float deltaTime, Detector &detector) {
             glfwSetWindowMonitor(window, nullptr, 100, 100, WIDTH, HEIGHT, GLFW_DONT_CARE);
             fullscreen = false;
         }
+
+        // Polygonal mode on
+        if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) {
+            glPolygonMode(GL_FRONT_AND_BACK , GL_LINE);
+        }
+
+        // Polygonal mode off
+        if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) {
+            glPolygonMode(GL_FRONT_AND_BACK , GL_FILL);
+        }
     }
 
     // Handle player actions
