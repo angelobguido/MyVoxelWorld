@@ -15,3 +15,4 @@ Move current object: Arrow keys (The object is oriented with the coordinate axis
 Quit: Esc
 Fullscreen: F
 WindowMode: G
+![Captura de tela de 2024-05-30 23-52-00](https://github.com/user-attachments/assets/afff4c9b-6773-4b0b-b88a-faa0c1c3618e)
