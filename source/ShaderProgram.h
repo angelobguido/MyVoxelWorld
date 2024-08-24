@@ -10,6 +10,7 @@
 #include <fstream>
 #include <sstream>
 #include <utility>
+typedef unsigned int uint;
 
 class ShaderProgram {
 public:

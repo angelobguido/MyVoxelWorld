@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(RayTracing)
+project(MyVoxelWorld)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -20,4 +20,4 @@ add_executable(MyVoxelWorld
         source/Saver.h
 )
 
-target_link_libraries(MyVoxelWorld -lglfw -lGL -lGLEW -lm)
+target_link_libraries(MyVoxelWorld -lglfw3 -lglew32 -lopengl32)
